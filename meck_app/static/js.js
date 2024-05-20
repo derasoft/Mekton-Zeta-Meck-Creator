@@ -45,45 +45,42 @@ function getEquipByCode(x) {
 
 function addLimb(limb) {
     if (limb != "T") partCount++;
-    let te = document.createElement('div');
-    te.classList.add('element');
-    te.id = partCount;
     let tex = 
-        `<table style="width: 100%;">
-            <tr>
-                <td style="width: 50%" id="baseLimb${partCount}">
-                    <p>
-                        <button onclick='delLimb(farParent(this, 6))'>Х</button>
-                        <input name='title'>
-                    </p>
-                    <select onchange="updLimb(meck[${partCount}], Number(this.value))">${mClassOptionDOM}</select>
-                    <p id='find_me'></p>
-                </td>
-                <td style="width: 50%" id="limbArmor${partCount}">
-                    <p id = "emptyArmorLabel">Put some armor here</p>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" id="equipList${partCount}">
-                    <p id = "emptyEquipLabel">Put equipement here</p>
-                </td>
-            </tr>
-        </table>`;
-    te.innerHTML = tex;
-    meckWindow.append(te);
-    let curHTMLEll = $(`#${partCount}`)[0];
-    curHTMLEll.desc = $("#find_me")[0];
+        `<form name="limb${partCount}" class="element" onchange="updLimb(getLimbByID(${partCount}))">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 50%" id="baseLimb${partCount}">
+                        <p>
+                            <button onclick='delLimb(${partCount})'>Х</button>
+                            <input name='title'>
+                        </p>
+                        <select name="mclass">${mClassOptionDOM}</select>
+                        <p id='status${partCount}'></p>
+                    </td>
+                    <td style="width: 50%" id="limbArmor${partCount}">
+                        <p id="emptyArmorLabel${partCount}">Put some armor here</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" id="equipList${partCount}">
+                        <p id="emptyEquipLabel${partCount}">Put equipement here</p>
+                    </td>
+                </tr>
+            </table>
+        </form>`;
+    meckWindow.insertAdjacentHTML('beforeend', tex);
+    let curHTMLEll = document.forms[`limb${partCount}`];
+    curHTMLEll.status = $(`#status${partCount}`)[0];
     curHTMLEll.baseLimb = $(`#baseLimb${partCount}`)[0];
     curHTMLEll.limbArmor = $(`#limbArmor${partCount}`)[0];
     curHTMLEll.equipList = $(`#equipList${partCount}`)[0];
-    curHTMLEll.desc.id = `desc${partCount}`;
     let ell = {
         id: partCount,
         type: 'limb',
         mclass: 1,
         contains: [],
         armor: {},
-        inGUI: $(`#${partCount}`)[0],
+        inGUI: document.forms[`limb${partCount}`],
     };
     switch(limb) {
         case 'T':
@@ -115,9 +112,9 @@ function addLimb(limb) {
     ell.inGUI.ondragover = fuckDef;
     ell.inGUI.limbArmor.ondrop = addArmor;
     ell.inGUI.equipList.ondrop = addEquip;
-    ell.inGUI.getElementsByTagName('input')[0].value = ell.name;
+    ell.inGUI.elements["title"] = ell.name;
     meck.push(ell);
-    updLimb(getLimbByID(partCount), 1);
+    updLimb(getLimbByID(partCount));
 }
 function addArmor(event) {
     event.preventDefault();
@@ -173,7 +170,7 @@ function addBeam(event, who) {
         $('#emptyEquipLabel').hide();
     }
     let tex = 
-        `<form name = "equip${equipCode}">
+        `<form name = "equip${equipCode}" onchange="updBeam('${equipCode}')">
             <div>
                 <p>
                     <button type="button" onclick="delEquip('${equipCode}')">Х</button>
@@ -182,7 +179,7 @@ function addBeam(event, who) {
                 <p id="status${equipCode}"></p>
                 <p>
                     Damage:
-                    <select name="damage" onchange="updBeam('${equipCode}')">
+                    <select name="damage">
                         <option value = "1_4">1 dmg | Range 4</option>
                         <option value = "2_6">2 dmg | Range 6</option>
                         <option value = "3_7">3 dmg | Range 7</option>
@@ -205,7 +202,7 @@ function addBeam(event, who) {
                         <option value = "20_18">20 dmg | Range 18</option>
                     </select>
                     Range:
-                    <select name="range" onchange="updBeam('${equipCode}')">
+                    <select name="range">
                         <option value = "0.62">25%</option>
                         <option value = "0.75">50%</option>
                         <option value = "0.88">75%</option>
@@ -218,7 +215,7 @@ function addBeam(event, who) {
                         <option value = "2">300%</option>
                     </select>
                     Accuracy:
-                    <select name="accuracy" onchange="updBeam('${equipCode}')">
+                    <select name="accuracy">
                         <option value = "0.6">-2</option>
                         <option value = "0.8">-1</option>
                         <option value = "0.9">0</option>
@@ -227,14 +224,14 @@ function addBeam(event, who) {
                         <option value = "2">+3</option>
                     </select>
                     Warm-up Time:
-                    <select name="warmup"  onchange="updBeam('${equipCode}')">
+                    <select name="warmup">
                         <option value = "1">0</option>
                         <option value = "0.9">1</option>
                         <option value = "0.7">2</option>
                         <option value = "0.6">3</option>
                     </select>
                     Shots:
-                    <select name="shots"  onchange="updBeam('${equipCode}')">
+                    <select name="shots">
                         <option value = "1">∞</option>
                         <option value = "0.9">10</option>
                         <option value = "0.8">5</option>
@@ -244,7 +241,7 @@ function addBeam(event, who) {
                         <option value = "0.33">0</option>
                     </select>
                     Wide Angle:
-                    <select name="angle" onchange="updBeam('${equipCode}')">
+                    <select name="angle">
                         <option value = "1">N/A</option>
                         <option value = "2">Hex</option>
                         <option value = "3">60°</option>
@@ -253,7 +250,7 @@ function addBeam(event, who) {
                         <option value = "9">360°</option>
                     </select>
                     Burst:
-                    <select name="burst" onchange="updBeam('${equipCode}')">
+                    <select name="burst">
                         <option value = "1">1</option>
                         <option value = "1.5">2</option>
                         <option value = "2">3</option>
@@ -266,50 +263,57 @@ function addBeam(event, who) {
                     </select>
                 </p>
                 <p>
-                    Clip-fed: <input name="clip" type="checkbox"  onchange="updBeam('${equipCode}')">
-                    Target: Standart <input type="radio" name="target" value="standart" checked onchange="updBeam('${equipCode}')">
+                    Clip-fed: <input name="clip" type="checkbox" >
+                    Target: Standart <input type="radio" name="target" value="standart" checked>
                 </p>
                 <table>
                     <tr>
-                        <td>Anti-Missle <input type="radio" name="target" value="am" onchange="updBeam('${equipCode}')"></td>
-                        <td>Anti-Personel <input type="radio" name="target" value="ap" onchange="updBeam('${equipCode}')"></td>
-                        <td>Anti-Missle & Anti-Personel <input type="radio" name="target" value="amap" onchange="updBeam('${equipCode}')"></td>
+                        <td>Anti-Missle <input type="radio" name="target" value="am"></td>
+                        <td>Anti-Personel <input type="radio" name="target" value="ap"></td>
+                        <td>Anti-Missle & Anti-Personel <input type="radio" name="target" value="amap"></td>
                     </tr>
                     <tr>
-                        <td>Variable <input type="radio" name="target" value="vam" onchange="updBeam('${equipCode}')"></td>
-                        <td>Variable <input type="radio" name="target" value="vap" onchange="updBeam('${equipCode}')"></td>
-                        <td>All-Purpouse <input type="radio" name="target" value="vamap" onchange="updBeam('${equipCode}')"></td>
+                        <td>Variable <input type="radio" name="target" value="vam"></td>
+                        <td>Variable <input type="radio" name="target" value="vap"></td>
+                        <td>All-Purpouse <input type="radio" name="target" value="vamap"></td>
                     </tr>
                 </table>
                 <p> 
-                    Fragile: <input name="fragile" type="checkbox" onchange="updBeam('${equipCode}')"> 
-                    Long Range: <input name="longrange" type="checkbox" onchange="updBeam('${equipCode}')"> 
-                    Hydro: <input name="hydro" type="checkbox" onchange="updBeam('${equipCode}')"> 
-                    Mega-Beam: <input name="mega" type="checkbox" onchange="updBeam('${equipCode}')"> 
-                    Disruptor: <input name="disruptor" type="checkbox" onchange="updBeam('${equipCode}')"> 
+                    Fragile: <input name="fragile" type="checkbox"> 
+                    Long Range: <input name="longrange" type="checkbox"> 
+                    Hydro: <input name="hydro" type="checkbox"> 
+                    Mega-Beam: <input name="mega" type="checkbox"> 
+                    Disruptor: <input name="disruptor" type="checkbox"> 
                 </p>
             </div>
         </form>`;
     who.insertAdjacentHTML('beforeend', tex);
-    meck[curLimb.id].contains[curEquipId] = {type: 'weapon', subtype: 'beam', cp: 0, kills: 0, conected: document.forms[`equip${equipCode}`]};
+    meck[curLimb.id].contains[curEquipId] = {
+        type: 'weapon', 
+        subtype: 'beam', 
+        cp: 0, 
+        kills: 0, 
+        conected: document.forms[`equip${equipCode}`]
+    };
     updBeam(equipCode);
 }
 
-function updLimb(x, mclass) {
+function updLimb(x) {
+    mclass = Number(x.inGUI.elements['mclass'].value);
     switch (x.subtype) {
         case 'limbT':
             x.cost = mclass * 2;
             x.space = mclass * 2;
             x.kills = mclass * 2;
             x.mclass = mclass;
-            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
+            x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
         case 'limbH':
             x.cost = mclass;
             x.space = mclass;
             x.kills = mclass;
             x.mclass = mclass;
-            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`; 
+            x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`; 
             break
         case 'limbA':
             x.cost = mclass + 1;
@@ -317,7 +321,7 @@ function updLimb(x, mclass) {
             x.kills = mclass + 1;
             x.plusDmg = Math.floor((mclass-1)/3);
             x.throw = Math.floor(mclass/2)+1;
-            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t, +${x.plusDmg} Damage, ${x.throw} throw distance`;  
+            x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t, +${x.plusDmg} Damage, ${x.throw} throw distance`;  
             break
         case 'limbL':
             x.cost = mclass + 1;
@@ -325,21 +329,21 @@ function updLimb(x, mclass) {
             x.kills = mclass + 1;
             x.mclass = mclass;
             x.plusDmg = Math.floor((mclass-1)/2);
-            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t, +${x.plusDmg} Damage`;
+            x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t, +${x.plusDmg} Damage`;
             break
         case 'limbW':
             x.cost = mclass;
             x.space = mclass;
             x.kills = mclass;
             x.mclass = mclass;
-            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
+            x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
         case 'limbP':
             x.cost = mclass;
             x.space = mclass * 2;
             x.kills = 0;
             x.mclass = mclass;
-            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
+            x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
     }
     updTotal();
@@ -443,9 +447,9 @@ function updBeam(x) {
 
 function delLimb(x) {
     for (let c = 0; c < meck.length; c++) {
-        if (Number(meck[c].inGUI.id) == Number(x.id)) meck.splice(c, 1);
+        if (meck[c].id == x) meck.splice(c, 1);
     }
-    x.remove();
+    document.forms[`limb${x}`].remove();
     updTotal();
 }
 function delArmor(x) {
