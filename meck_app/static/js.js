@@ -1,0 +1,500 @@
+let totalMass = 0;
+let totalCost = 0;
+let partCount = 0;
+let statusbar = document.getElementById('stat');
+let meckWindow = document.getElementById('itshere');
+const mClassOptionDOM = 
+    `<option value="1">Superlight</option>
+    <option value="2">Lightweight</option>
+    <option value="3">Striker</option>
+    <option value="4">Mediumstriker</option>
+    <option value="5">Heavy Striker</option>
+    <option value="6">Mediumweight</option>
+    <option value="7">Light Heavy</option>
+    <option value="8">Medium Heavy</option>
+    <option value="9">Armored Heavy</option>
+    <option value="10">Super Heavy</option>
+    <option value="11">Mega Heavy</option>` 
+let meck = [];
+addLimb("T");
+
+function howManyParts(x) {
+    let y = 0;
+    for (let c = 0; c < meck.length; c++) {
+        if (meck[c].subtype == x) y++;
+    }
+    if (y == 0) {
+        for (let c = 0; c < meck.length; c++) {
+            for (let c2 = 0; c2 < meck[c].contains.length; c2++) {
+                if (!(meck[c].contains[c2] == null)) {
+                    if (meck[c].contains[c2].subtype == x) y++;
+                } else continue;
+            }
+        }
+    }
+    return y;
+}
+function getLimbByID(x) {
+    for (let c=0; c < meck.length; c++) {
+        if (meck[c].id == x) return meck[c];
+    }
+}
+function getEquipByCode(x) {
+    
+}
+
+function addLimb(limb) {
+    if (limb != "T") partCount++;
+    let te = document.createElement('div');
+    te.classList.add('element');
+    te.id = partCount;
+    let tex = 
+        `<table style="width: 100%;">
+            <tr>
+                <td style="width: 50%" id="baseLimb${partCount}">
+                    <p>
+                        <button onclick='delLimb(farParent(this, 6))'>Х</button>
+                        <input name='title'>
+                    </p>
+                    <select onchange="updLimb(meck[${partCount}], Number(this.value))">${mClassOptionDOM}</select>
+                    <p id='find_me'></p>
+                </td>
+                <td style="width: 50%" id="limbArmor${partCount}">
+                    <p id = "emptyArmorLabel">Put some armor here</p>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" id="equipList${partCount}">
+                    <p id = "emptyEquipLabel">Put equipement here</p>
+                </td>
+            </tr>
+        </table>`;
+    te.innerHTML = tex;
+    meckWindow.append(te);
+    let curHTMLEll = $(`#${partCount}`)[0];
+    curHTMLEll.desc = $("#find_me")[0];
+    curHTMLEll.baseLimb = $(`#baseLimb${partCount}`)[0];
+    curHTMLEll.limbArmor = $(`#limbArmor${partCount}`)[0];
+    curHTMLEll.equipList = $(`#equipList${partCount}`)[0];
+    curHTMLEll.desc.id = `desc${partCount}`;
+    let ell = {
+        id: partCount,
+        type: 'limb',
+        mclass: 1,
+        contains: [],
+        armor: {},
+        inGUI: $(`#${partCount}`)[0],
+    };
+    switch(limb) {
+        case 'T':
+            ell.name = 'Torso';
+            ell.subtype = 'limbT';
+            ell.inGUI.getElementsByTagName('button')[0].remove();
+            break
+        case 'H':
+            ell.name = 'Head' + howManyParts('limbH');
+            ell.subtype = 'limbH';
+            break
+        case 'A':
+            ell.name = 'Arm' + howManyParts('limbA');
+            ell.subtype = 'limbA';
+            break
+        case 'L':
+            ell.name = 'Leg' + howManyParts('limbL');
+            ell.subtype = 'limbL';
+            break
+        case 'W':
+            ell.name = 'Wing' + howManyParts('limbW');
+            ell.subtype = 'limbW';
+            break
+        case 'P':
+            ell.name = 'Pod' + howManyParts('limbP');
+            ell.subtype = 'limbP';
+            break
+    }
+    ell.inGUI.ondragover = fuckDef;
+    ell.inGUI.limbArmor.ondrop = addArmor;
+    ell.inGUI.equipList.ondrop = addEquip;
+    ell.inGUI.getElementsByTagName('input')[0].value = ell.name;
+    meck.push(ell);
+    updLimb(getLimbByID(partCount), 1);
+}
+function addArmor(event) {
+    event.preventDefault();
+    data = event.dataTransfer.getData("text/plain");
+    if (data == "armor") {
+        this.where = farParent(this, 4);
+        this.innerHTML = 
+            `<p><button onclick='delArmor(farParent(this, 2).where)'>X</button><b>Armor</b></p>
+            <p>
+                <select id="armorClass${this.where.id}" onchange="updArmor(${this.where.id})">
+                    ${mClassOptionDOM}
+                </select>
+                <select id="armorType${this.where.id}" onchange="updArmor(${this.where.id})">
+                    <option value="0">Ablative</option>
+                    <option value="1" selected>Standart</option>
+                    <option value="2">Alpha</option>
+                    <option value="4">Beta</option>
+                    <option value="8">Gamma</option>
+                </select>
+            </p>
+            <p>
+                R.A.M.:
+                <select id="armorRAM${this.where.id}" onchange="updArmor(${this.where.id})">
+                    <option value="N/A">N/A</option>
+                    <option value="1/5">1/5</option>
+                    <option value="1/4">1/4</option>
+                    <option value="1/3">1/3</option>
+                    <option value="1/2">1/2</option>
+                </select>
+            </p>
+            <p id="armDesc${this.where.id}">
+            </p>`;
+        let curLimb = getLimbByID(this.where.id);
+        curLimb.armor.sp = 1;
+        curLimb.armor.type = 1;
+        curLimb.armor.ram = 0;
+        updArmor(curLimb.id);
+    } 
+}
+function addEquip(event) {
+    event.preventDefault();
+    let data = event.dataTransfer.getData("text/plain");
+    let x = this;
+    switch (data) {
+        case 'beam': addBeam(event, x); break;
+    }
+}
+function addBeam(event, who) {
+    let curLimb = getLimbByID(Number(who.id.slice(9)));
+    let curEquipId = curLimb.contains.length;
+    let equipCode = `${curLimb.id}_${curEquipId}`
+    if (curEquipId == 0) {
+        $('#emptyEquipLabel').hide();
+    }
+    let tex = 
+        `<form name = "equip${equipCode}">
+            <div>
+                <p>
+                    <button type="button" onclick="delEquip('${equipCode}')">Х</button>
+                    <b>Beam Weapon</b>
+                </p>
+                <p id="status${equipCode}"></p>
+                <p>
+                    Damage:
+                    <select name="damage" onchange="updBeam('${equipCode}')">
+                        <option value = "1_4">1 dmg | Range 4</option>
+                        <option value = "2_6">2 dmg | Range 6</option>
+                        <option value = "3_7">3 dmg | Range 7</option>
+                        <option value = "4_8">4 dmg | Range 8</option>
+                        <option value = "5_9">5 dmg | Range 9</option>
+                        <option value = "6_10">6 dmg | Range 10</option>
+                        <option value = "7_11">7 dmg | Range 11</option>
+                        <option value = "8_11">8 dmg | Range 11</option>
+                        <option value = "9_12">9 dmg | Range 12</option>
+                        <option value = "10_13">10 dmg | Range 13</option>
+                        <option value = "11_13">11 dmg | Range 13</option>
+                        <option value = "12_14">12 dmg | Range 14</option>
+                        <option value = "13_14">13 dmg | Range 14</option>
+                        <option value = "14_15">14 dmg | Range 15</option>
+                        <option value = "15_15">15 dmg | Range 15</option>
+                        <option value = "16_16">16 dmg | Range 16</option>
+                        <option value = "17_16">17 dmg | Range 16</option>
+                        <option value = "18_17">18 dmg | Range 17</option>
+                        <option value = "19_17">19 dmg | Range 17</option>
+                        <option value = "20_18">20 dmg | Range 18</option>
+                    </select>
+                    Range:
+                    <select name="range" onchange="updBeam('${equipCode}')">
+                        <option value = "0.62">25%</option>
+                        <option value = "0.75">50%</option>
+                        <option value = "0.88">75%</option>
+                        <option value = "1" selected>100%</option>
+                        <option value = "1.12">125%</option>
+                        <option value = "1.25">150%</option>
+                        <option value = "1.38">175%</option>
+                        <option value = "1.5">200%</option>
+                        <option value = "1.75">250%</option>
+                        <option value = "2">300%</option>
+                    </select>
+                    Accuracy:
+                    <select name="accuracy" onchange="updBeam('${equipCode}')">
+                        <option value = "0.6">-2</option>
+                        <option value = "0.8">-1</option>
+                        <option value = "0.9">0</option>
+                        <option value = "1" selected>+1</option>
+                        <option value = "1.5">+2</option>
+                        <option value = "2">+3</option>
+                    </select>
+                    Warm-up Time:
+                    <select name="warmup"  onchange="updBeam('${equipCode}')">
+                        <option value = "1">0</option>
+                        <option value = "0.9">1</option>
+                        <option value = "0.7">2</option>
+                        <option value = "0.6">3</option>
+                    </select>
+                    Shots:
+                    <select name="shots"  onchange="updBeam('${equipCode}')">
+                        <option value = "1">∞</option>
+                        <option value = "0.9">10</option>
+                        <option value = "0.8">5</option>
+                        <option value = "0.7">3</option>
+                        <option value = "0.6">2</option>
+                        <option value = "0.5">1</option>
+                        <option value = "0.33">0</option>
+                    </select>
+                    Wide Angle:
+                    <select name="angle" onchange="updBeam('${equipCode}')">
+                        <option value = "1">N/A</option>
+                        <option value = "2">Hex</option>
+                        <option value = "3">60°</option>
+                        <option value = "5">180°</option>
+                        <option value = "7">300°</option>
+                        <option value = "9">360°</option>
+                    </select>
+                    Burst:
+                    <select name="burst" onchange="updBeam('${equipCode}')">
+                        <option value = "1">1</option>
+                        <option value = "1.5">2</option>
+                        <option value = "2">3</option>
+                        <option value = "2.5">4</option>
+                        <option value = "3">5</option>
+                        <option value = "3.5">6</option>
+                        <option value = "4">7</option>
+                        <option value = "4.5">8</option>
+                        <option value = "5">∞</option>
+                    </select>
+                </p>
+                <p>
+                    Clip-fed: <input name="clip" type="checkbox"  onchange="updBeam('${equipCode}')">
+                    Target: Standart <input type="radio" name="target" value="standart" checked onchange="updBeam('${equipCode}')">
+                </p>
+                <table>
+                    <tr>
+                        <td>Anti-Missle <input type="radio" name="target" value="am" onchange="updBeam('${equipCode}')"></td>
+                        <td>Anti-Personel <input type="radio" name="target" value="ap" onchange="updBeam('${equipCode}')"></td>
+                        <td>Anti-Missle & Anti-Personel <input type="radio" name="target" value="amap" onchange="updBeam('${equipCode}')"></td>
+                    </tr>
+                    <tr>
+                        <td>Variable <input type="radio" name="target" value="vam" onchange="updBeam('${equipCode}')"></td>
+                        <td>Variable <input type="radio" name="target" value="vap" onchange="updBeam('${equipCode}')"></td>
+                        <td>All-Purpouse <input type="radio" name="target" value="vamap" onchange="updBeam('${equipCode}')"></td>
+                    </tr>
+                </table>
+                <p> 
+                    Fragile: <input name="fragile" type="checkbox" onchange="updBeam('${equipCode}')"> 
+                    Long Range: <input name="longrange" type="checkbox" onchange="updBeam('${equipCode}')"> 
+                    Hydro: <input name="hydro" type="checkbox" onchange="updBeam('${equipCode}')"> 
+                    Mega-Beam: <input name="mega" type="checkbox" onchange="updBeam('${equipCode}')"> 
+                    Disruptor: <input name="disruptor" type="checkbox" onchange="updBeam('${equipCode}')"> 
+                </p>
+            </div>
+        </form>`;
+    who.insertAdjacentHTML('beforeend', tex);
+    meck[curLimb.id].contains[curEquipId] = {type: 'weapon', subtype: 'beam', cp: 0, kills: 0, conected: document.forms[`equip${equipCode}`]};
+    updBeam(equipCode);
+}
+
+function updLimb(x, mclass) {
+    switch (x.subtype) {
+        case 'limbT':
+            x.cost = mclass * 2;
+            x.space = mclass * 2;
+            x.kills = mclass * 2;
+            x.mclass = mclass;
+            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
+            break
+        case 'limbH':
+            x.cost = mclass;
+            x.space = mclass;
+            x.kills = mclass;
+            x.mclass = mclass;
+            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`; 
+            break
+        case 'limbA':
+            x.cost = mclass + 1;
+            x.space = mclass + 1;
+            x.kills = mclass + 1;
+            x.plusDmg = Math.floor((mclass-1)/3);
+            x.throw = Math.floor(mclass/2)+1;
+            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t, +${x.plusDmg} Damage, ${x.throw} throw distance`;  
+            break
+        case 'limbL':
+            x.cost = mclass + 1;
+            x.space = mclass + 1;
+            x.kills = mclass + 1;
+            x.mclass = mclass;
+            x.plusDmg = Math.floor((mclass-1)/2);
+            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t, +${x.plusDmg} Damage`;
+            break
+        case 'limbW':
+            x.cost = mclass;
+            x.space = mclass;
+            x.kills = mclass;
+            x.mclass = mclass;
+            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
+            break
+        case 'limbP':
+            x.cost = mclass;
+            x.space = mclass * 2;
+            x.kills = 0;
+            x.mclass = mclass;
+            x.inGUI.desc.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
+            break
+    }
+    updTotal();
+}
+function updArmor(x) {
+    y = getLimbByID(x);
+    let mclass = Number($(`#armorClass${y.id}`)[0].value);
+    console.log(mclass);
+    let mdc = Number($(`#armorType${y.id}`)[0].value);
+    let costmod1 = 1;
+    switch (mdc) {
+        case 0: costmod1 = 0.5; break;
+        case 1: costmod1 = 1; break;
+        case 2: costmod1 = 1.25; break;
+        case 4: costmod1 = 1.5; break;
+        case 8: costmod1 = 2.0; break;
+    }
+    let mram = $(`#armorRAM${y.id}`)[0].value;
+    let costmod2 = 1;
+    let mpen = 0;
+    switch (mram) {
+        case 'N/A': costmod2 = 1; mpen = 0; break;
+        case '1/5': costmod2 = 1.5; mpen = 1; break;
+        case '1/4': costmod2 = 1.8; mpen = 0.8; break;
+        case '1/3': costmod2 = 2.2; mpen = 0.75; break;
+        case '1/2': costmod2 = 2.5; mpen = 0.66; break;
+    }
+    y.armor.class = mclass;
+    y.armor.dc = mdc;
+    y.armor.ram = mram;
+    y.armor.sp = Math.ceil(mclass - (mclass * mpen));
+    y.armor.mass = mclass/2;
+    y.armor.cost = mclass * costmod1 * costmod2;
+    let curDesc = $(`#armDesc${y.id}`);
+    curDesc.innerHTML = `SP: ${y.armor.sp} | DC: ${mdc} | `;
+    if (mram != 'N/A') curDesc.innerHTML += `R.A.M.: ${mram} | `;
+    curDesc.innerHTML += `Cost: ${y.armor.cost} | Mass: ${y.armor.mass}`;
+    updTotal();
+}
+function updBeam(x) {
+    let c = x.indexOf('_'); //cashe variable
+    let whatLimb = x.slice(0, c);
+    let whatEq = x.slice(c+1);
+    let newa = meck[whatLimb].contains[whatEq];
+    let formdata = newa.conected.elements;
+    newa.cp = 0;
+
+    newa.range = formdata.damage.value;
+    c = newa.range.indexOf('_');
+    newa.damage = Number(newa.range.slice(0, c));
+    newa.cp = newa.damage * 1.5;
+    newa.range = Number(newa.range.slice(c+1));
+
+    newa.rangemod = formdata.range.value;
+    switch (newa.rangemod) {
+        case '0.62': newa.range = Math.ceil(newa.range * 0.25); break;
+        case '0.75': newa.range = Math.ceil(newa.range * 0.5); break;
+        case '0.88': newa.range = Math.ceil(newa.range * 0.75); break;
+        case '1': break;
+        case '1.12': newa.range = Math.ceil(newa.range * 1.25); break;
+        case '1.25': newa.range = Math.ceil(newa.range * 1.5); break;
+        case '1.38': newa.range = Math.ceil(newa.range * 1.75); break;
+        case '1.5': newa.range *= 2; break;
+        case '1.75': newa.range = Math.ceil(newa.range * 2.5); break;
+        case '2': newa.range *= 3; break;
+    }
+    newa.accuracy = Number(formdata.accuracy.value);
+    newa.warmup = Number(formdata.warmup.value);
+    newa.shots = Number(formdata.shots.value);
+    newa.angle = Number(formdata.angle.value);
+    newa.burst = Number(formdata.burst.value);
+    newa.cp = newa.cp * newa.rangemod * newa.accuracy * newa.warmup * newa.shots * newa.angle * newa.burst;
+
+    newa.clip = formdata.clip.checked;
+    if (newa.clip) newa.cp *= 0.9;
+    newa.target = formdata.target.value;
+    switch (newa.target) {
+        case 'standart' : break;
+        case 'am' : break;
+        case 'ap' : break;
+        case 'amap' : newa.cp *= 1.8; break;
+        case 'vam' : newa.cp *= 1.8; break;
+        case 'vap' : newa.cp *= 1.8; break;
+        case 'vamap' : newa.cp *= 2.6; break;
+    }
+    newa.fragile = formdata.fragile.checked;
+    newa.longrange = formdata.longrange.checked;
+    if (newa.longrange) newa.cp *= 1.33;
+    newa.hydro = formdata.hydro.checked;
+    if (newa.hydro) newa.cp *= 0.2;
+    newa.mega = formdata.mega.checked;
+    if (newa.mega) newa.cp *= 10;
+    newa.disruptor = formdata.disruptor.checked;
+    if (newa.disruptor) newa.cp *= 2;
+
+    newa.cp = mektonRounding(newa.cp);
+    console.log(meck[whatLimb].contains[whatEq]); 
+    $(`#status${x}`)[0].innerHTML = newa.cp + ' CP, Range: ' + newa.range + '';
+    updTotal();
+}
+
+function delLimb(x) {
+    for (let c = 0; c < meck.length; c++) {
+        if (Number(meck[c].inGUI.id) == Number(x.id)) meck.splice(c, 1);
+    }
+    x.remove();
+    updTotal();
+}
+function delArmor(x) {
+    for (let c = 0; c < meck.length; c++) {
+        if (Number(meck[c].inGUI.id) == Number(x.id)) meck[c].armor = {};
+    }
+    x.limbArmor.innerHTML = '<p>Put some armor here</p>';
+    updTotal();
+}
+function delEquip(x) {
+    let c = x.indexOf('_'); //cashe variable
+    let whatLimb = x.slice(0, c);
+    let whatEq = x.slice(c+1);
+    meck[whatLimb].contains[whatEq].conected.remove();
+    delete meck[whatLimb].contains[whatEq];
+    if (meck[whatLimb].contains.length == 0) $('#emptyEquipLabel').show();
+    updTotal();
+}
+
+function updTotal() {
+    totalCost = 0;
+    totalMass = 0;
+    for (let c = 0; c < meck.length; c++) {
+        totalMass += meck[c].kills/2;
+        totalCost += meck[c].cost;
+        if (meck[c].armor.cost!=null) {
+            totalCost += meck[c].armor.cost;
+            totalMass += meck[c].armor.mass;
+        } 
+        if ((typeof meck[c].contains[0]) !== "undefined") {
+            for (let c2 = 0; c2 < meck[c].contains.length; c2++) {
+                totalCost += meck[c].contains[c2].cp;
+                totalMass += meck[c].contains[c2].kills;
+            }
+        }
+    }
+    statusbar.innerHTML = `Cost: ${totalCost} CP, Mass: ${totalMass}t`;
+}
+
+function fuckDef(event) {
+    event.preventDefault();
+}
+function farParent(x, n) {
+    for (let c = 0; c < n; c++) {
+        x = x.parentNode;
+    }
+    return x;
+}
+function mektonRounding(x) {
+    let y = (Math.ceil(x*10)/10);
+    return y;
+}
