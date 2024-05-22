@@ -2,7 +2,7 @@ let totalMass = 0;
 let totalCost = 0;
 let partCount = 0;
 let statusbar = document.getElementById('stat');
-let meckWindow = document.getElementById('itshere');
+let mechWindow = $(".mechWindow")[0];
 const mClassOptionDOM = 
     `<option value="1">Superlight</option>
     <option value="2">Lightweight</option>
@@ -46,41 +46,40 @@ function getEquipByCode(x) {
 function addLimb(limb) {
     if (limb != "T") partCount++;
     let tex = 
-        `<form name="limb${partCount}" class="element" onchange="updLimb(getLimbByID(${partCount}))">
-            <table style="width: 100%;">
-                <tr>
-                    <td style="width: 50%" id="baseLimb${partCount}">
+        `<div id='limbWindow${partCount}' class="limbWindow">
+            <form name="limb${partCount}" onchange="updLimb(getLimbByID(${partCount}))">
+                <div class="limbShell">
+                    <div class="limbCore" id="baseLimb${partCount}">
                         <p>
-                            <button onclick='delLimb(${partCount})'>Х</button>
+                            <button type="button" onclick='delLimb(${partCount})'>Х</button>
                             <input name='title'>
                         </p>
                         <select name="mclass">${mClassOptionDOM}</select>
                         <p id='status${partCount}'></p>
-                    </td>
-                    <td style="width: 50%" id="limbArmor${partCount}">
+                    </div>
+                    <div class="armorBlock" id="limbArmor${partCount}">
                         <p id="emptyArmorLabel${partCount}">Put some armor here</p>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" id="equipList${partCount}">
-                        <p id="emptyEquipLabel${partCount}">Put equipement here</p>
-                    </td>
-                </tr>
-            </table>
-        </form>`;
-    meckWindow.insertAdjacentHTML('beforeend', tex);
-    let curHTMLEll = document.forms[`limb${partCount}`];
+                    </div>
+                </div>
+            </form>
+            <div id="equipList${partCount}">
+                <p id="emptyEquipLabel${partCount}">Put equipement here</p>
+            </div>
+        </div>`;
+    mechWindow.insertAdjacentHTML('beforeend', tex); 
+    let curHTMLEll = $(`#limbWindow${partCount}`)[0];;
     curHTMLEll.status = $(`#status${partCount}`)[0];
     curHTMLEll.baseLimb = $(`#baseLimb${partCount}`)[0];
     curHTMLEll.limbArmor = $(`#limbArmor${partCount}`)[0];
     curHTMLEll.equipList = $(`#equipList${partCount}`)[0];
+    curHTMLEll.form = document.forms[`limb${partCount}`]
     let ell = {
         id: partCount,
         type: 'limb',
         mclass: 1,
         contains: [],
         armor: {},
-        inGUI: document.forms[`limb${partCount}`],
+        inGUI: $(`#limbWindow${partCount}`)[0],
     };
     switch(limb) {
         case 'T':
@@ -109,10 +108,11 @@ function addLimb(limb) {
             ell.subtype = 'limbP';
             break
     }
+
     ell.inGUI.ondragover = fuckDef;
     ell.inGUI.limbArmor.ondrop = addArmor;
     ell.inGUI.equipList.ondrop = addEquip;
-    ell.inGUI.elements["title"] = ell.name;
+    ell.inGUI.form.elements["title"] = ell.name;
     meck.push(ell);
     updLimb(getLimbByID(partCount));
 }
@@ -120,38 +120,39 @@ function addArmor(event) {
     event.preventDefault();
     data = event.dataTransfer.getData("text/plain");
     if (data == "armor") {
-        this.where = farParent(this, 4);
-        this.innerHTML = 
-            `<p><button onclick='delArmor(farParent(this, 2).where)'>X</button><b>Armor</b></p>
-            <p>
-                <select id="armorClass${this.where.id}" onchange="updArmor(${this.where.id})">
-                    ${mClassOptionDOM}
-                </select>
-                <select id="armorType${this.where.id}" onchange="updArmor(${this.where.id})">
-                    <option value="0">Ablative</option>
-                    <option value="1" selected>Standart</option>
-                    <option value="2">Alpha</option>
-                    <option value="4">Beta</option>
-                    <option value="8">Gamma</option>
-                </select>
-            </p>
-            <p>
-                R.A.M.:
-                <select id="armorRAM${this.where.id}" onchange="updArmor(${this.where.id})">
-                    <option value="N/A">N/A</option>
-                    <option value="1/5">1/5</option>
-                    <option value="1/4">1/4</option>
-                    <option value="1/3">1/3</option>
-                    <option value="1/2">1/2</option>
-                </select>
-            </p>
-            <p id="armDesc${this.where.id}">
-            </p>`;
-        let curLimb = getLimbByID(this.where.id);
-        curLimb.armor.sp = 1;
-        curLimb.armor.type = 1;
-        curLimb.armor.ram = 0;
-        updArmor(curLimb.id);
+        let limbID = this.id.slice(9);
+        let tex = 
+            `<div id="armor${limbID}" style="border:initial" onchange="updArmor('${limbID}')">
+                <p><button type="button" onclick='delArmor(${limbID})'>X</button><b>Armor</b></p>
+                <p>
+                    <select name="armorClass" >
+                        ${mClassOptionDOM}
+                    </select>
+                    <select name="armorType">
+                        <option value="0">Ablative</option>
+                        <option value="1" selected>Standart</option>
+                        <option value="2">Alpha</option>
+                        <option value="4">Beta</option>
+                        <option value="8">Gamma</option>
+                    </select>
+                </p>
+                <p>
+                    R.A.M.:
+                    <select name="armorRAM">
+                        <option value="N/A">N/A</option>
+                        <option value="1/5">1/5</option>
+                        <option value="1/4">1/4</option>
+                        <option value="1/3">1/3</option>
+                        <option value="1/2">1/2</option>
+                    </select>
+                </p>
+                <p id="armorStatus${limbID}"></p>
+            </div>`;
+        this.where = getLimbByID(limbID);
+        this.insertAdjacentHTML('beforeend', tex);
+        $(`#emptyArmorLabel${limbID}`)[0].hidden = true;
+        this.where.armor.inGUI = $(`#armor${limbID}`)[0];
+        updArmor(limbID);
     } 
 }
 function addEquip(event) {
@@ -164,6 +165,7 @@ function addEquip(event) {
 }
 function addBeam(event, who) {
     let curLimb = getLimbByID(Number(who.id.slice(9)));
+    $(`#emptyEquipLabel${partCount}`).hide();
     let curEquipId = curLimb.contains.length;
     let equipCode = `${curLimb.id}_${curEquipId}`
     if (curEquipId == 0) {
@@ -299,7 +301,7 @@ function addBeam(event, who) {
 }
 
 function updLimb(x) {
-    mclass = Number(x.inGUI.elements['mclass'].value);
+    mclass = Number(x.inGUI.form.elements['mclass'].value);
     switch (x.subtype) {
         case 'limbT':
             x.cost = mclass * 2;
@@ -348,11 +350,10 @@ function updLimb(x) {
     }
     updTotal();
 }
-function updArmor(x) {
+function updArmor(x) {;
     y = getLimbByID(x);
-    let mclass = Number($(`#armorClass${y.id}`)[0].value);
-    console.log(mclass);
-    let mdc = Number($(`#armorType${y.id}`)[0].value);
+    let mclass = Number(y.inGUI.form['armorClass'].value);
+    let mdc = Number(y.inGUI.form[`armorType`].value);
     let costmod1 = 1;
     switch (mdc) {
         case 0: costmod1 = 0.5; break;
@@ -361,7 +362,7 @@ function updArmor(x) {
         case 4: costmod1 = 1.5; break;
         case 8: costmod1 = 2.0; break;
     }
-    let mram = $(`#armorRAM${y.id}`)[0].value;
+    let mram = y.inGUI.form['armorRAM'].value;
     let costmod2 = 1;
     let mpen = 0;
     switch (mram) {
@@ -377,10 +378,8 @@ function updArmor(x) {
     y.armor.sp = Math.ceil(mclass - (mclass * mpen));
     y.armor.mass = mclass/2;
     y.armor.cost = mclass * costmod1 * costmod2;
-    let curDesc = $(`#armDesc${y.id}`);
-    curDesc.innerHTML = `SP: ${y.armor.sp} | DC: ${mdc} | `;
-    if (mram != 'N/A') curDesc.innerHTML += `R.A.M.: ${mram} | `;
-    curDesc.innerHTML += `Cost: ${y.armor.cost} | Mass: ${y.armor.mass}`;
+    let curDesc = $(`#armorStatus${y.id}`)[0];
+    curDesc.innerHTML = `SP: ${y.armor.sp} | DC: ${mdc} | Cost: ${y.armor.cost} | Mass: ${y.armor.mass}`;
     updTotal();
 }
 function updBeam(x) {
@@ -449,14 +448,15 @@ function delLimb(x) {
     for (let c = 0; c < meck.length; c++) {
         if (meck[c].id == x) meck.splice(c, 1);
     }
-    document.forms[`limb${x}`].remove();
+    $(`#limbWindow${x}`).remove();
     updTotal();
 }
 function delArmor(x) {
     for (let c = 0; c < meck.length; c++) {
-        if (Number(meck[c].inGUI.id) == Number(x.id)) meck[c].armor = {};
+        if (meck[c].id == x) meck[c].armor = {};
     }
-    x.limbArmor.innerHTML = '<p>Put some armor here</p>';
+    $(`#armor${x}`)[0].remove();
+    $(`#emptyArmorLabel${x}`)[0].hidden = false;
     updTotal();
 }
 function delEquip(x) {
@@ -464,8 +464,8 @@ function delEquip(x) {
     let whatLimb = x.slice(0, c);
     let whatEq = x.slice(c+1);
     meck[whatLimb].contains[whatEq].conected.remove();
-    delete meck[whatLimb].contains[whatEq];
-    if (meck[whatLimb].contains.length == 0) $('#emptyEquipLabel').show();
+    meck[whatLimb].contains.splice(whatEq, 1);
+    if (meck[whatLimb].contains.length == 0) $(`#emptyEquipLabel${partCount}`).show(); 
     updTotal();
 }
 
@@ -479,7 +479,7 @@ function updTotal() {
             totalCost += meck[c].armor.cost;
             totalMass += meck[c].armor.mass;
         } 
-        if ((typeof meck[c].contains[0]) !== "undefined") {
+        if (meck[c].contains.length != 0) {
             for (let c2 = 0; c2 < meck[c].contains.length; c2++) {
                 totalCost += meck[c].contains[c2].cp;
                 totalMass += meck[c].contains[c2].kills;
