@@ -55,6 +55,10 @@ function addLimb(limb) {
                             <input name='title'>
                         </p>
                         <select name="mclass">${mClassOptionDOM}</select>
+                        <select name="type" hidden>
+                            <option value="W">Wheels</option>
+                            <option value="T">Treads</option>
+                        </select>
                         <p id='status${partCount}'></p>
                     </div>
                     <div class="armorBlock" id="limbArmor${partCount}">
@@ -106,6 +110,11 @@ function addLimb(limb) {
         case 'P':
             ell.name = 'Pod' + howManyParts('limbP');
             ell.subtype = 'limbP';
+            break
+        case 'O':
+            ell.name = 'Pod' + howManyParts('limbO');
+            ell.subtype = 'limbO';
+            ell.inGUI.form['type'].hidden = false;
             break
     }
 
@@ -344,6 +353,15 @@ function updLimb(x) {
             x.cost = mclass;
             x.space = mclass * 2;
             x.kills = 0;
+            x.mclass = mclass;
+            x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
+            break
+        case 'limbO':
+            let n = 1;
+            if (x.inGUI.form['type'].value == "T") n=2;
+            x.cost = mclass * n;
+            x.space = mclass * n;
+            x.kills = mclass * n;
             x.mclass = mclass;
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
