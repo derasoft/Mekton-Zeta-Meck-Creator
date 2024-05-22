@@ -10,9 +10,8 @@
 - (NI) Save and load your mech for sharing
 - (NI) Scale mech
 ## Roadmap
-- Add Wheels to limbs
-- Add all weapons (w/ pools and mating)
 - Add Limb Space calculation
+- Add all weapons (w/ pools and mating)
 - Add mountings to limbs
 - Add Aditive Systems
 - Add System Spliting
