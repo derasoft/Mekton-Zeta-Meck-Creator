@@ -3,7 +3,7 @@ equip = [];
 
 function addBeam() {
     equipCode = equip.length;
-    let tex = `<form name="equip${equipCode}">
+    let tex = `<form name="equip${equipCode}" onchange="updBeam('${equipCode}')">
             <div>
                 <p>
                     <button onclick='delEquip(farParent(this, 6))'>Х</button>
@@ -12,7 +12,7 @@ function addBeam() {
                 <p id="status_equip${equipCode}"></p>
                 <p>
                     Damage:
-                    <select id="damage" onchange="updBeam('${equipCode}')">
+                    <select id="damage" >
                         <option value = "1_4">1 dmg | Range 4</option>
                         <option value = "2_6">2 dmg | Range 6</option>
                         <option value = "3_7">3 dmg | Range 7</option>
@@ -35,7 +35,7 @@ function addBeam() {
                         <option value = "20_18">20 dmg | Range 18</option>
                     </select>
                     Range:
-                    <select id="range" onchange="updBeam('${equipCode}')">
+                    <select id="range">
                         <option value = "0.62">25%</option>
                         <option value = "0.75">50%</option>
                         <option value = "0.88">75%</option>
@@ -48,7 +48,7 @@ function addBeam() {
                         <option value = "2">300%</option>
                     </select>
                     Accuracy:
-                    <select id="accuracy" onchange="updBeam('${equipCode}')">
+                    <select id="accuracy">
                         <option value = "0.6">-2</option>
                         <option value = "0.8">-1</option>
                         <option value = "0.9">0</option>
@@ -57,14 +57,14 @@ function addBeam() {
                         <option value = "2">+3</option>
                     </select>
                     Warm-up Time:
-                    <select id="warmup"  onchange="updBeam('${equipCode}')">
+                    <select id="warmup">
                         <option value = "1">0</option>
                         <option value = "0.9">1</option>
                         <option value = "0.7">2</option>
                         <option value = "0.6">3</option>
                     </select>
                     Shots:
-                    <select id="shots"  onchange="updBeam('${equipCode}')">
+                    <select id="shots">
                         <option value = "1">∞</option>
                         <option value = "0.9">10</option>
                         <option value = "0.8">5</option>
@@ -74,7 +74,7 @@ function addBeam() {
                         <option value = "0.33">0</option>
                     </select>
                     Wide Angle:
-                    <select id="angle" onchange="updBeam('${equipCode}')">
+                    <select id="angle">
                         <option value = "1">N/A</option>
                         <option value = "2">Hex</option>
                         <option value = "3">60°</option>
@@ -83,7 +83,7 @@ function addBeam() {
                         <option value = "9">360°</option>
                     </select>
                     Burst:
-                    <select id="burst" onchange="updBeam('${equipCode}')">
+                    <select id="burst">
                         <option value = "1">1</option>
                         <option value = "1.5">2</option>
                         <option value = "2">3</option>
@@ -96,32 +96,34 @@ function addBeam() {
                     </select>
                 </p>
                 <p>
-                    Clip-fed: <input id="clip" type="checkbox"  onchange="updBeam('${equipCode}')">
-                    Target: Standart <input type="radio" name="target" value="standart" checked onchange="updBeam('${equipCode}')">
+                    Clip-fed: <input id="clip" type="checkbox">
+                    Target: Standart <input type="radio" name="target" value="standart" checked>
                 </p>
                 <table>
                     <tr>
-                        <td>Anti-Missle <input type="radio" name="target" value="am" onchange="updBeam('${equipCode}')"></td>
-                        <td>Anti-Personel <input type="radio" name="target" value="ap" onchange="updBeam('${equipCode}')"></td>
-                        <td>Anti-Missle & Anti-Personel <input type="radio" name="target" value="amap" onchange="updBeam('${equipCode}')"></td>
+                        <td>Anti-Missle <input type="radio" name="target" value="am"></td>
+                        <td>Anti-Personel <input type="radio" name="target" value="ap"></td>
+                        <td>Anti-Missle & Anti-Personel <input type="radio" name="target" value="amap"></td>
                     </tr>
                     <tr>
-                        <td>Variable <input type="radio" name="target" value="vam" onchange="updBeam('${equipCode}')"></td>
-                        <td>Variable <input type="radio" name="target" value="vap" onchange="updBeam('${equipCode}')"></td>
-                        <td>All-Purpouse <input type="radio" name="target" value="vamap" onchange="updBeam('${equipCode}')"></td>
+                        <td>Variable <input type="radio" name="target" value="vam"></td>
+                        <td>Variable <input type="radio" name="target" value="vap"></td>
+                        <td>All-Purpouse <input type="radio" name="target" value="vamap"></td>
                     </tr>
                 </table>
                 <p> 
-                    Fragile: <input id="fragile" type="checkbox" onchange="updBeam('${equipCode}')"> 
-                    Long Range: <input id="longrange" type="checkbox" onchange="updBeam('${equipCode}')"> 
-                    Hydro: <input id="hydro" type="checkbox" onchange="updBeam('${equipCode}')"> 
-                    Mega-Beam: <input id="mega" type="checkbox" onchange="updBeam('${equipCode}')"> 
-                    Disruptor: <input id="disruptor" type="checkbox" onchange="updBeam('${equipCode}')"> 
+                    Fragile: <input id="fragile" type="checkbox"> 
+                    Long Range: <input id="longrange" type="checkbox"> 
+                    Hydro: <input id="hydro" type="checkbox"> 
+                    Mega-Beam: <input id="mega" type="checkbox"> 
+                    Disruptor: <input id="disruptor" type="checkbox"> 
                 </p>
             </div>
         </form>`
     document.body.insertAdjacentHTML('beforeend', tex);
-    equip[equipCode] = document.getElementsByName(`equip${equipCode}`)[0];
+    equip[equipCode] = document.forms[`equip${equipCode}`];
+    equip[equipCode]
+
     updBeam(equipCode);
 }
 

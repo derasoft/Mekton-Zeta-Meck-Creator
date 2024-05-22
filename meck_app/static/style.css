@@ -16,3 +16,41 @@
   border-color: gray;
   padding: 2px;
 }
+
+/* Стили 2.0 */
+div {
+  border: 2px solid;
+  margin: 2px;
+  padding: 2px;
+}
+
+ .mainWindow { /*Основное окно */
+  display: flex;
+  border:initial;
+}
+.equipList {
+  width: 30%;
+}
+.mechWindow {
+  width: 70%;
+}
+.limbWindow {}
+.limbShell {
+  display: flex;
+  border:initial;
+  margin: initial;
+  padding: initial;
+}
+.limbCore {
+  flex-grow: 1;
+}
+.armorBlock {
+  flex-grow: 1;
+}
+.comArmorBlock {
+  flex-grow: 1;
+}
+.limbMount {}
+.limbEquip {}
+.equipPool {}
+.weapon {}
