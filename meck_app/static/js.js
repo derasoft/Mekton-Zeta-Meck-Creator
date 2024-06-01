@@ -59,7 +59,10 @@ function addLimb(limb) {
                             <option value="W">Wheels</option>
                             <option value="T">Treads</option>
                         </select>
-                        <p id='status${partCount}'></p>
+                        <p>
+                            <span id='status${partCount}'></span>
+                            <span id='spaceLeft${partCount}'></span>
+                        </p>
                     </div>
                     <div class="armorBlock" id="limbArmor${partCount}">
                         <p id="emptyArmorLabel${partCount}">Put some armor here</p>
@@ -76,6 +79,7 @@ function addLimb(limb) {
     curHTMLEll.baseLimb = $(`#baseLimb${partCount}`)[0];
     curHTMLEll.limbArmor = $(`#limbArmor${partCount}`)[0];
     curHTMLEll.equipList = $(`#equipList${partCount}`)[0];
+    curHTMLEll.spaceLeft = $(`#spaceLeft${partCount}`)[0];
     curHTMLEll.form = document.forms[`limb${partCount}`]
     let ell = {
         id: partCount,
@@ -311,58 +315,41 @@ function addBeam(event, who) {
 
 function updLimb(x) {
     mclass = Number(x.inGUI.form.elements['mclass'].value);
+    x.mclass = mclass;
     switch (x.subtype) {
         case 'limbT':
-            x.cost = mclass * 2;
-            x.space = mclass * 2;
-            x.kills = mclass * 2;
-            x.mclass = mclass;
+            x.cost = x.maxSpace = x.kills = mclass * 2;
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
         case 'limbH':
-            x.cost = mclass;
-            x.space = mclass;
-            x.kills = mclass;
-            x.mclass = mclass;
+            x.cost = x.maxSpace = x.kills = mclass;
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`; 
             break
         case 'limbA':
-            x.cost = mclass + 1;
-            x.space = mclass + 1;
-            x.kills = mclass + 1;
+            x.cost = x.maxSpace = x.kills = mclass + 1;
             x.plusDmg = Math.floor((mclass-1)/3);
             x.throw = Math.floor(mclass/2)+1;
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t, +${x.plusDmg} Damage, ${x.throw} throw distance`;  
             break
         case 'limbL':
-            x.cost = mclass + 1;
-            x.space = mclass + 1;
-            x.kills = mclass + 1;
-            x.mclass = mclass;
+            x.cost = x.maxSpace = x.kills = mclass + 1;
             x.plusDmg = Math.floor((mclass-1)/2);
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t, +${x.plusDmg} Damage`;
             break
         case 'limbW':
-            x.cost = mclass;
-            x.space = mclass;
-            x.kills = mclass;
-            x.mclass = mclass;
+            x.cost = x.maxSpace = x.kills = mclass;
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
         case 'limbP':
             x.cost = mclass;
-            x.space = mclass * 2;
+            x.maxSpace = mclass * 2;
             x.kills = 0;
-            x.mclass = mclass;
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
         case 'limbO':
             let n = 1;
             if (x.inGUI.form['type'].value == "T") n=2;
-            x.cost = mclass * n;
-            x.space = mclass * n;
-            x.kills = mclass * n;
-            x.mclass = mclass;
+            x.cost = x.maxSpace = x.kills = mclass * n;
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
     }
@@ -457,6 +444,9 @@ function updBeam(x) {
     if (newa.disruptor) newa.cp *= 2;
 
     newa.cp = mektonRounding(newa.cp);
+    if (newa.fragile == true) newa.mass = 0.5
+    else newa.kills = newa.cp/2;
+    newa.space = newa.cp;
     console.log(meck[whatLimb].contains[whatEq]); 
     $(`#status${x}`)[0].innerHTML = newa.cp + ' CP, Range: ' + newa.range + '';
     updTotal();
@@ -498,10 +488,15 @@ function updTotal() {
             totalMass += meck[c].armor.mass;
         } 
         if (meck[c].contains.length != 0) {
+            spaces = 0;
             for (let c2 = 0; c2 < meck[c].contains.length; c2++) {
                 totalCost += meck[c].contains[c2].cp;
                 totalMass += meck[c].contains[c2].kills;
+                spaces += meck[c].contains[c2].space;
             }
+            meck[c].inGUI.spaceLeft.innerHTML = ` | Spaces: ${spaces}/${meck[c].maxSpace}`
+            if (spaces > meck[c].maxSpace) meck[c].inGUI.spaceLeft.style.color = "red"
+            else meck[c].inGUI.spaceLeft.style.color = "black";
         }
     }
     statusbar.innerHTML = `Cost: ${totalCost} CP, Mass: ${totalMass}t`;

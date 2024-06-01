@@ -10,7 +10,6 @@
 - (NI) Save and load your mech for sharing
 - (NI) Scale mech
 ## Roadmap
-- Add Limb Space calculation
 - Add all weapons (w/ pools and mating)
 - Add mountings to limbs
 - Add Aditive Systems
@@ -20,6 +19,8 @@
 - Add Transformations
 - Add Scaling
 - Add Saving and Loading
+- Beam Weapons Warmup/limited shots choise
+- Beam Weapons Clips
  
 # Known Bugs
 - You can fit two armors in armor slot
