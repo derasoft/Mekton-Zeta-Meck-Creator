@@ -7,7 +7,11 @@
     <link rel="stylesheet" href='{% static "style.css" %}'>
 </head>
 <body>
-    <p id="stat">Статус</p>
+    <p>
+        <span id="stat">Статус</span>
+        <button onclick="saveJsonTotal()">Save</button>
+        <button onclick="loadJsonShowDialog()">Load</button>
+    </p>
     <div class="mainWindow">
         <div class="mechWindow"></div>
         <div class="equipList"><h2>Limbs</h2>

@@ -1,38 +1,27 @@
-/* div {
-  border: 2px solid;
-  margin: 2px;
-} */
-.cont {
-  display: flex;
-  border: 2px solid;
-  margin: 2px;
-  }
-.bigbox {
-  width: 50%;
-  padding: 4px;
-}
-.element {
-  border: 2px solid;
-  border-color: gray;
-  padding: 2px;
-}
-
 /* Стили 2.0 */
+body {
+  overflow: hidden;
+}
 div {
   border: 2px solid;
   margin: 2px;
   padding: 2px;
 }
 
- .mainWindow { /*Основное окно */
+/*Основное окно */
+ .mainWindow { 
   display: flex;
-  border:initial;
+  border: initial;
 }
 .equipList {
   width: 30%;
+  overflow: auto;
+  height: 85vh;
 }
 .mechWindow {
   width: 70%;
+  overflow: auto;
+  height: 85vh;
 }
 .limbWindow {}
 .limbShell {
@@ -54,3 +43,9 @@ div {
 .limbEquip {}
 .equipPool {}
 .weapon {}
+.systemMessage {
+  background-color: white;
+  position: absolute;
+  right: 30%;
+  bottom: 30%;
+}

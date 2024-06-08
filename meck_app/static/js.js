@@ -16,6 +16,7 @@ const mClassOptionDOM =
     <option value="10">Super Heavy</option>
     <option value="11">Mega Heavy</option>` 
 let meck = [];
+let meckMult = {sosik: "yaya"};
 addLimb("T");
 
 function howManyParts(x) {
@@ -40,7 +41,14 @@ function getLimbByID(x) {
     }
 }
 function getEquipByCode(x) {
-    
+    let y = x.indexOf('_');
+    let whatLimb = x.slice(0, y);
+    let whatEq = x.slice(y+1);
+    y = meck[whatLimb];
+    for (let c in y.contains) {
+        if (y.contains[c].id == whatEq) 
+            return y.contains[c];
+    }
 }
 
 function addLimb(limb) {
@@ -84,6 +92,7 @@ function addLimb(limb) {
     let ell = {
         id: partCount,
         type: 'limb',
+        equipCounter: 0,
         mclass: 1,
         contains: [],
         armor: {},
@@ -179,9 +188,8 @@ function addEquip(event) {
 function addBeam(event, who) {
     let curLimb = getLimbByID(Number(who.id.slice(9)));
     $(`#emptyEquipLabel${partCount}`).hide();
-    let curEquipId = curLimb.contains.length;
-    let equipCode = `${curLimb.id}_${curEquipId}`
-    if (curEquipId == 0) {
+    let equipCode = `${curLimb.id}_${curLimb.equipCounter}`
+    if (curLimb.contains.length == 0) {
         $('#emptyEquipLabel').hide();
     }
     let tex = 
@@ -303,13 +311,16 @@ function addBeam(event, who) {
             </div>
         </form>`;
     who.insertAdjacentHTML('beforeend', tex);
-    meck[curLimb.id].contains[curEquipId] = {
+    meck[curLimb.id].contains.push({
         type: 'weapon', 
-        subtype: 'beam', 
+        subtype: 'beam',
+        id: curLimb.equipCounter,
         cp: 0, 
         kills: 0, 
-        conected: document.forms[`equip${equipCode}`]
-    };
+        inGUI: document.forms[`equip${equipCode}`]
+    })
+    console.log(meck[0].contains);
+    curLimb.equipCounter++;
     updBeam(equipCode);
 }
 
@@ -388,11 +399,8 @@ function updArmor(x) {;
     updTotal();
 }
 function updBeam(x) {
-    let c = x.indexOf('_'); //cashe variable
-    let whatLimb = x.slice(0, c);
-    let whatEq = x.slice(c+1);
-    let newa = meck[whatLimb].contains[whatEq];
-    let formdata = newa.conected.elements;
+    let newa = getEquipByCode(x);
+    let formdata = newa.inGUI.elements;
     newa.cp = 0;
 
     newa.range = formdata.damage.value;
@@ -446,8 +454,7 @@ function updBeam(x) {
     newa.cp = mektonRounding(newa.cp);
     if (newa.fragile == true) newa.mass = 0.5
     else newa.kills = newa.cp/2;
-    newa.space = newa.cp;
-    console.log(meck[whatLimb].contains[whatEq]); 
+    newa.space = newa.cp; 
     $(`#status${x}`)[0].innerHTML = newa.cp + ' CP, Range: ' + newa.range + '';
     updTotal();
 }
@@ -471,8 +478,16 @@ function delEquip(x) {
     let c = x.indexOf('_'); //cashe variable
     let whatLimb = x.slice(0, c);
     let whatEq = x.slice(c+1);
-    meck[whatLimb].contains[whatEq].conected.remove();
-    meck[whatLimb].contains.splice(whatEq, 1);
+    y = getEquipByCode(x);
+    y.inGUI.remove();
+    for (c in meck[whatLimb].contains) {
+        if (meck[whatLimb].contains[c] == y) {
+            y = c;
+            break;
+        }
+    }
+    meck[whatLimb].contains.splice(y, 1);
+    console.log(meck[whatLimb].contains);
     if (meck[whatLimb].contains.length == 0) $(`#emptyEquipLabel${partCount}`).show(); 
     updTotal();
 }
@@ -489,7 +504,7 @@ function updTotal() {
         } 
         if (meck[c].contains.length != 0) {
             spaces = 0;
-            for (let c2 = 0; c2 < meck[c].contains.length; c2++) {
+            for (c2 in meck[c].contains) {
                 totalCost += meck[c].contains[c2].cp;
                 totalMass += meck[c].contains[c2].kills;
                 spaces += meck[c].contains[c2].space;
@@ -500,6 +515,47 @@ function updTotal() {
         }
     }
     statusbar.innerHTML = `Cost: ${totalCost} CP, Mass: ${totalMass}t`;
+}
+
+function saveJson(x) {
+    return JSON.stringify(x);
+}
+function saveJsonTotal() {
+    let x = meck;
+    for (let c in x) {
+        delete x[c].inGUI
+        if (!(typeof x[c].armor === undefined)) {
+            delete x[c].armor.inGUI
+        }
+        for (let c2 in x[c].contains) {
+            delete x[c].contains[c2].inGUI
+        }
+    }
+    x = saveJson([x, meckMult]);
+    let tex = 
+    `<div class="systemMessage" id="saveWin">
+        <p>JSON of your mech:</p>
+        <input value='${x}'>
+        <button onclick="$('#saveWin')[0].remove();">OK</button>
+    </div>`
+    document.body.insertAdjacentHTML('beforeend', tex); 
+}
+function loadJsonShowDialog() {
+    let tex = 
+    `<div class="systemMessage" id="loadWin">
+        <form name="loadWin">
+            <p>Put here JSON of your meck:</p>
+            <input name="lMeck">
+            <button onclick="loadJsonTotal()">OK</button>
+        </form>
+    </div>`
+    document.body.insertAdjacentHTML('beforeend', tex); 
+}
+function loadJsonTotal() {
+    $('#loadWin')[0].remove();
+}
+function loadJsonMicro(x, type, location=null) {
+
 }
 
 function fuckDef(event) {
