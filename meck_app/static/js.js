@@ -17,6 +17,8 @@ const mClassOptionDOM =
     <option value="11">Mega Heavy</option>` 
 let meck = [];
 let meckMult = {sosik: "yaya"};
+let isLoad = false;
+let loadData = {};
 addLimb("T");
 
 function howManyParts(x) {
@@ -64,8 +66,8 @@ function addLimb(limb) {
                         </p>
                         <select name="mclass">${mClassOptionDOM}</select>
                         <select name="type" hidden>
-                            <option value="W">Wheels</option>
-                            <option value="T">Treads</option>
+                            <option value="1">Wheels</option>
+                            <option value="2">Treads</option>
                         </select>
                         <p>
                             <span id='status${partCount}'></span>
@@ -127,10 +129,10 @@ function addLimb(limb) {
         case 'O':
             ell.name = 'Pod' + howManyParts('limbO');
             ell.subtype = 'limbO';
+            ell.wheelSwitch = 1;
             ell.inGUI.form['type'].hidden = false;
             break
     }
-
     ell.inGUI.ondragover = fuckDef;
     ell.inGUI.limbArmor.ondrop = addArmor;
     ell.inGUI.equipList.ondrop = addEquip;
@@ -182,15 +184,15 @@ function addEquip(event) {
     let data = event.dataTransfer.getData("text/plain");
     let x = this;
     switch (data) {
-        case 'beam': addBeam(event, x); break;
+        case 'beam': addBeam(x); break;
     }
 }
-function addBeam(event, who) {
+function addBeam(who) {
     let curLimb = getLimbByID(Number(who.id.slice(9)));
-    $(`#emptyEquipLabel${partCount}`).hide();
+    $(`#emptyEquipLabel${curLimb.id}`).hide();
     let equipCode = `${curLimb.id}_${curLimb.equipCounter}`
     if (curLimb.contains.length == 0) {
-        $('#emptyEquipLabel').hide();
+        $(`#emptyEquipLabel${curLimb.id}`).hide();
     }
     let tex = 
         `<form name = "equip${equipCode}" onchange="updBeam('${equipCode}')">
@@ -319,12 +321,15 @@ function addBeam(event, who) {
         kills: 0, 
         inGUI: document.forms[`equip${equipCode}`]
     })
-    console.log(meck[0].contains);
     curLimb.equipCounter++;
     updBeam(equipCode);
 }
 
 function updLimb(x) {
+    if (isLoad == true) {
+        x.inGUI.form.elements['mclass'].value = loadData.mclass;
+        x.inGUI.form.elements['type'].value = loadData.wheelSwitch;
+    }
     mclass = Number(x.inGUI.form.elements['mclass'].value);
     x.mclass = mclass;
     switch (x.subtype) {
@@ -358,9 +363,8 @@ function updLimb(x) {
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
         case 'limbO':
-            let n = 1;
-            if (x.inGUI.form['type'].value == "T") n=2;
-            x.cost = x.maxSpace = x.kills = mclass * n;
+            x.wheelSwitch = Number(x.inGUI.form['type'].value)
+            x.cost = x.maxSpace = x.kills = mclass * x.wheelSwitch;
             x.inGUI.status.innerHTML = `Cost: ${x.cost} CP, Weight: ${x.kills/2}t`;
             break
     }
@@ -487,32 +491,30 @@ function delEquip(x) {
         }
     }
     meck[whatLimb].contains.splice(y, 1);
-    console.log(meck[whatLimb].contains);
-    if (meck[whatLimb].contains.length == 0) $(`#emptyEquipLabel${partCount}`).show(); 
+    if (meck[whatLimb].contains.length == 0) {$(`#emptyEquipLabel${whatLimb}`).show()}; 
     updTotal();
 }
 
 function updTotal() {
     totalCost = 0;
     totalMass = 0;
-    for (let c = 0; c < meck.length; c++) {
+    for (let c in meck) {
         totalMass += meck[c].kills/2;
         totalCost += meck[c].cost;
         if (meck[c].armor.cost!=null) {
             totalCost += meck[c].armor.cost;
             totalMass += meck[c].armor.mass;
         } 
-        if (meck[c].contains.length != 0) {
-            spaces = 0;
-            for (c2 in meck[c].contains) {
-                totalCost += meck[c].contains[c2].cp;
-                totalMass += meck[c].contains[c2].kills;
-                spaces += meck[c].contains[c2].space;
-            }
-            meck[c].inGUI.spaceLeft.innerHTML = ` | Spaces: ${spaces}/${meck[c].maxSpace}`
-            if (spaces > meck[c].maxSpace) meck[c].inGUI.spaceLeft.style.color = "red"
-            else meck[c].inGUI.spaceLeft.style.color = "black";
+        spaces = 0;
+        for (c2 in meck[c].contains) {
+            totalCost += meck[c].contains[c2].cp;
+            totalMass += meck[c].contains[c2].kills;
+            spaces += meck[c].contains[c2].space;
         }
+        meck[c].inGUI.spaceLeft.innerHTML = ` | Spaces: ${spaces}/${meck[c].maxSpace}`
+        if (spaces > meck[c].maxSpace) meck[c].inGUI.spaceLeft.style.color = "red"
+        else meck[c].inGUI.spaceLeft.style.color = "black";
+        
     }
     statusbar.innerHTML = `Cost: ${totalCost} CP, Mass: ${totalMass}t`;
 }
@@ -523,7 +525,8 @@ function saveJson(x) {
 function saveJsonTotal() {
     let x = meck;
     for (let c in x) {
-        delete x[c].inGUI
+        delete x[c].inGUI;
+        delete x[c].equipCounter;
         if (!(typeof x[c].armor === undefined)) {
             delete x[c].armor.inGUI
         }
@@ -552,7 +555,20 @@ function loadJsonShowDialog() {
     document.body.insertAdjacentHTML('beforeend', tex); 
 }
 function loadJsonTotal() {
+    let x = document.forms.loadWin.elements.lMeck.value;
+    x = JSON.parse(x);
+    let loadCore = x[0];
+    let loafOptions = x[1];
+    $('.mechWindow')[0].innerHTML = "";
+    meck = [];
+    partCount = 0;
+    isLoad = true;
     $('#loadWin')[0].remove();
+    for (let c in loadCore) {
+        loadData = loadCore[c];
+        addLimb(loadCore[c].subtype.slice(4, 5));
+    }
+    isLoad = false;
 }
 function loadJsonMicro(x, type, location=null) {
 

@@ -7,6 +7,8 @@
     <link rel="stylesheet" href='{% static "style.css" %}'>
 </head>
 <body>
+    <script src='{% static "jquery-3.7.1.min.js" %}'></script>
+    
     <p>
         <span id="stat">Статус</span>
         <button onclick="saveJsonTotal()">Save</button>
@@ -26,7 +28,6 @@
             <h2>Weapons (drag that to equipment section)</h2>
             <p draggable="true" ondragstart="event.dataTransfer.setData('text/plain', 'beam')">   Beam</p></div>
     </div>
-    <script src='{% static "jquery-3.7.1.min.js" %}'></script>
     <script src='{% static "js.js" %}'></script>
 </body>
 </html>
