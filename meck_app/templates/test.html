@@ -7,10 +7,14 @@
     <link rel="stylesheet" href='{% static "style.css" %}'>
 </head>
 <body>
-    <script src='{% static "test.js" %}'></script>
     <script src='{% static "jquery-3.7.1.min.js" %}'></script>
+    
+    <p>
+        <span id="stat">Статус</span>
+        <button onclick="saveJsonTotal()">Save</button>
+        <button onclick="loadJsonShowDialog()">Load</button>
+    </p>
     <div class="mainWindow">
-        <p id="stat">Статус</p>
         <div class="mechWindow"></div>
         <div class="equipList"><h2>Limbs</h2>
             <p><button onclick="addLimb('H')">+</button>   Head</p>
@@ -18,11 +22,13 @@
             <p><button onclick="addLimb('L')">+</button>   Leg</p>
             <p><button onclick="addLimb('W')">+</button>   Wing & Tail</p>
             <p><button onclick="addLimb('P')">+</button>   Pod</p>
+            <p><button onclick="addLimb('O')">+</button>   Wheels & Treads</p>
             <h2>Armor (drag that to armor section)</h2>
             <p draggable="true" ondragstart="event.dataTransfer.setData('text/plain', 'armor')">   Armor</p>
             <h2>Weapons (drag that to equipment section)</h2>
             <p draggable="true" ondragstart="event.dataTransfer.setData('text/plain', 'beam')">   Beam</p></div>
     </div>
+    <script src='{% static "test.js" %}'></script>
 </body>
 </html>
 
