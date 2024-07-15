@@ -1,5 +1,5 @@
 function howManyParts(x) {
-    let y = 0;
+let y = 0;
     for (let c = 0; c < meck.length; c++) {
         if (meck[c].subtype == x) y++;
     }
@@ -14,11 +14,17 @@ function howManyParts(x) {
     }
     return y;
 }
-function getLimbByID(x) {
-    for (let c=0; c < meck.length; c++) {
-        if (meck[c].id == x) return meck[c];
-    }
+function getLimbByID(x, old=false) {
+    if (old == false)
+        for (let c=0; c < meck.length; c++) {
+            if (meck[c].id == x) return meck[c];
+        }
+    else
+        for (let c=0; c < meck.length; c++) {
+            if (meck[c].oldID == x) return meck[c];
+        }
 }
+
 function getEquipByCode(x) {
     let y = x.indexOf('_');
     let whatLimb = x.slice(0, y);
@@ -32,42 +38,44 @@ function getEquipByCode(x) {
 
 class Limb {
     constructor(limb) {
+        // Внутренности
         if (limb != "T") partCount++;
+        this.id = partCount;
+        this.type = 'limb';
+        this.equipCounter = 0;
+        this.contains = [];
+        this.armor = null;
+
+        // Форма
         let tex = 
-        `<div id='limbWindow${partCount}' class="limbWindow">
-            <form name="limb${partCount}" onchange="updLimb(getLimbByID(${partCount}))">
-                <div class="limbShell">
-                    <div class="limbCore" id="baseLimb${partCount}">
-                        <p>
-                            <button type="button" onclick='delLimb(${partCount})'>Х</button>
-                            <input name='title'>
-                        </p>
-                        <select name="mclass">${mClassOptionDOM}</select>
-                        <select name="type" hidden>
-                            <option value="1">Wheels</option>
-                            <option value="2">Treads</option>
-                        </select>
-                        <p>
-                            <span id='status${partCount}'></span>
-                            <span id='spaceLeft${partCount}'></span>
-                        </p>
+            `<div id='limbWindow${partCount}' class="limbWindow">
+                <form name="limb${partCount}" onchange="updLimb(getLimbByID(${partCount}))">
+                    <div class="limbShell">
+                        <div class="limbCore" id="baseLimb${partCount}">
+                            <p>
+                                <button type="button" onclick='delLimb(${partCount})'>Х</button>
+                                <input name='name'>
+                            </p>
+                            <select name="mclass">${mClassOptionDOM}</select>
+                            <select name="type" hidden>
+                                <option value="1">Wheels</option>
+                                <option value="2">Treads</option>
+                            </select>
+                            <p>
+                                <span id='status${partCount}'></span>
+                                <span id='spaceLeft${partCount}'></span>
+                            </p>
+                        </div>
+                        <div class="armorBlock" id="limbArmor${partCount}">
+                            <p id="emptyArmorLabel${partCount}">Put some armor here</p>
+                        </div>
                     </div>
-                    <div class="armorBlock" id="limbArmor${partCount}">
-                        <p id="emptyArmorLabel${partCount}">Put some armor here</p>
-                    </div>
+                </form>
+                <div id="equipList${partCount}">
+                    <p id="emptyEquipLabel${partCount}">Put equipement here</p>
                 </div>
-            </form>
-            <div id="equipList${partCount}">
-                <p id="emptyEquipLabel${partCount}">Put equipement here</p>
-            </div>
-        </div>`;
+            </div>`;
         mechWindow.insertAdjacentHTML('beforeend', tex); 
-        this.id = partCount,
-        this.type = 'limb',
-        this.equipCounter = 0,
-        this.mclass = 1,
-        this.contains = [],
-        this.armor = null,
         this.inGUI = {
             limbWindow: $(`#limbWindow${partCount}`)[0],
             status: $(`#status${partCount}`)[0],
@@ -77,6 +85,7 @@ class Limb {
             spaceLeft: $(`#spaceLeft${partCount}`)[0],
             form: document.forms[`limb${partCount}`],
         }
+        this.inGUI.limbWindow.dataLink = this;
         switch(limb) {
             case 'T':
                 this.name = 'Torso';
@@ -113,11 +122,13 @@ class Limb {
         this.inGUI.limbWindow.ondragover = fuckDef;
         this.inGUI.limbArmor.ondrop = addArmor;
         this.inGUI.equipList.ondrop = addEquip;
+        this.inGUI.form.elements['name'].value = this.name;
         this.updFromForm();
     }
     updFromForm() {
-        // this.inGUI.form.elements["title"] = this.name;
+        this.name = this.inGUI.form.elements["name"].value;
         this.mclass = Number(this.inGUI.form.elements['mclass'].value);
+        this.name = this.inGUI.form.elements['name'].value;
         switch (this.subtype) {
             case 'limbT':
                 this.cost = this.maxSpace = this.kills = this.mclass * 2;
@@ -157,8 +168,11 @@ class Limb {
         callUpdTotal();
     }
     updFromJSON(x) {
+        this.oldID = x.id;
+        this.inGUI.form.elements["name"].value = x.name;
         this.inGUI.form.elements['mclass'].value = x.mclass;
         this.inGUI.form.elements['type'].value = x.wheelSwitch;
+        partCount--;
         this.updFromForm();
     }
     get export() {
@@ -174,6 +188,7 @@ class Limb {
             else return null;
         }
         let x = {
+            id: this.id,
             mclass: this.mclass,
             name: this.name,
             type: this.type,
@@ -188,6 +203,7 @@ class Limb {
 class Armor {
     constructor(limbID) {
         this.limbLink = getLimbByID(limbID);
+        if (this.limbLink.armor != null) delArmor(this.limbLink.id);
         let tex = 
             `<div id="armor${limbID}" style="border:initial" onchange="updArmor('${limbID}')">
                 <p><button type="button" onclick='delArmor(${limbID})'>X</button><b>Armor</b></p>
@@ -217,6 +233,8 @@ class Armor {
             </div>`;
         this.limbLink.inGUI.limbArmor.insertAdjacentHTML('beforeend', tex);
         $(`#emptyArmorLabel${limbID}`)[0].hidden = true;
+        this.inGUI = $(`#armor${limbID}`)[0];
+        this.inGUI.dataLink = this;
         this.updFromForm();
     }
     updFromForm() {
@@ -255,7 +273,7 @@ class Armor {
         this.limbLink.inGUI.form.armorClass.value = x.class;
         this.limbLink.inGUI.form.armorType.value = x.dc;
         this.limbLink.inGUI.form.armorRAM.value = x.ram;
-        callUpdTotal();
+        this.updFromForm();
     }
     get export() {
         let x = {
@@ -266,23 +284,73 @@ class Armor {
         return x;
     }
 }
+class SlavePart {
+    constructor(targ, limbID, n) {
+        //Внутренности
+        let limb = targ.limbLink; //getLimbByID(limbID);
+        this.masterLink = targ;
+        this.masterLink.slaveParts.push(this);
+        this.id = limb.equipCounter;
+        this.space = Number(n);
+        this.masterLink.space = this.masterLink.space - this.space;
+        this.subtype = "slavePart";
+        this.cp = 0;
+        this.kills = 0;
+        this.equipCode = `${limb.id}_${limb.equipCounter}`;
+
+        // Форма
+        let tex = 
+        `<form id=equip${this.equipCode}>
+            <div>
+                <p>
+                    <button type="button" onclick="delSlave('${this.equipCode}')">Х</button>
+                    Slave Part of ${this.masterLink.name}
+                </p>
+            </div>
+        </form>`
+        limb.inGUI.equipList.insertAdjacentHTML('beforeend', tex);
+        this.inGUI = $(`#equip${this.equipCode}`)[0];
+        limb.equipCounter++;
+    }
+    updFromJSON(x, newMaster) {
+
+    }
+    get export() {
+        let x = {
+            id: this.masterLink.equipCode,
+            space: this.space,
+        }
+        return x;
+    }
+}
 class Beam {
     constructor(limbID) {
+        // Внутренние данные
         this.limbLink = getLimbByID(limbID);
         let curLimb = this.limbLink;
+        this.type= 'weapon'; 
+        this.subtype= 'beam';
+        this.id = curLimb.equipCounter;
+        this.equipCode = curLimb.id + '_' + this.id;
+        this.slaveParts = [];
+        curLimb.equipCounter++;
+
+        // Форма
         $(`#emptyEquipLabel${curLimb.id}`).hide();
-        let equipCode = `${curLimb.id}_${curLimb.equipCounter}`
         if (curLimb.contains.length == 0) {
             $(`#emptyEquipLabel${curLimb.id}`).hide();
         }
         let tex = 
-            `<form name = "equip${equipCode}" onchange="updBeam('${equipCode}')">
+            `<form name="equip${this.equipCode}" onchange="updBeam('${this.equipCode}')">
                 <div>
                     <p>
-                        <button type="button" onclick="delEquip('${equipCode}')">Х</button>
-                        <b>Beam Weapon</b>
+                        <button type="button" onclick="delEquip('${this.equipCode}')">Х</button>
+                        <b><input name='name' value='Beam Weapon'></b>
+                        <button type="button" onclick="splitEquipWin('${this.equipCode}')">
+                            <img src='static/split_icon.png'>
+                        </button>
                     </p>
-                    <p id="status${equipCode}"></p>
+                    <p id="status${this.equipCode}"></p>
                     <p>
                         Damage:
                         <select name="damage">
@@ -394,19 +462,20 @@ class Beam {
                 </div>
             </form>`;
         curLimb.inGUI.equipList.insertAdjacentHTML('beforeend', tex);
-        this.type= 'weapon', 
-        this.subtype= 'beam',
-        this.id= curLimb.equipCounter,
-        this.cp= 0, 
-        this.kills= 0, 
-        this.inGUI= document.forms[`equip${equipCode}`]
-        this.equipCode = curLimb.id + '_' + this.id;
-        curLimb.equipCounter++;
+        this.inGUI= document.forms[`equip${this.equipCode}`]
+        this.inGUI.dataLink = this;
+        this.inGUI.draggable = "true";
+        this.inGUI.ondragstart = function(event) {
+            event.dataTransfer.setData('text/plain', this.dataLink.equipCode);
+        }
+        stopHereMotherFucker(this.inGUI, this.inGUI.name);
+
         this.updFromForm()
     }
     updFromForm() {
         let newa = this;
         let formdata = newa.inGUI.elements;
+        this.name = formdata.name.value;
         newa.cp = 0;
         newa.range = formdata.damage.value;
         let c = newa.range.indexOf('_');
@@ -459,17 +528,20 @@ class Beam {
         newa.cp = mektonRounding(newa.cp);
         if (newa.fragile == true) newa.mass = 0.5
         else newa.kills = newa.cp/2;
-        newa.space = newa.cp; 
+        newa.spaceFull = newa.cp;
+        newa.space = newa.spaceFull;
         $(`#status${this.equipCode}`)[0].innerHTML = newa.cp + ' CP, Range: ' + (newa.range * newa.rangemod) + ', Max. Range: ' + (newa.range * newa.rangemod)*(newa.range * newa.rangemod);
         callUpdTotal();;
     }
     updFromJSON(x) {
+        this.oldID = x.id;
         let formdata = this.inGUI.elements;
         for (let c = 0; c < 20; c++) {
             let foo = formdata.damage.options[c].value.indexOf('_');
             foo = Number(formdata.damage.options[c].value.slice(0, foo))
             if (foo == x.damage) formdata.damage.options[c].selected = true;
         }
+        formdata.name.value = x.name;
         formdata.range.value = String(x.rangemod);
         formdata.accuracy.value = String(x.accuracy);
         formdata.warmup.value = String(x.warmup);
@@ -483,10 +555,12 @@ class Beam {
         formdata.hydro.checked = x.hydro;
         formdata.mega.checked = x.mega;
         formdata.disruptor.checked = x.disruptor;
+        this.limbLink.equipCounter--;
         this.updFromForm();
     }
     get export() {
         let x = {
+            id: this.id,
             accuracy: this.accuracy,
             angle: this.angle,
             burst: this.burst,
@@ -497,6 +571,7 @@ class Beam {
             hydro: this.hydro,
             longrange: this.longrange,
             mega: this.mega,
+            name: this.name,
             rangemod: this.rangemod,
             shots: this.shots,
             subtype: this.subtype,
@@ -545,11 +620,22 @@ function addArmor(event) {
     } 
 }
 function addEquip(event) {
+    let original = undefined;
     event.preventDefault();
     let data = event.dataTransfer.getData("text/plain");
     let x = Number(this.id.slice(9));
+    if (data.indexOf('_') != -1) {
+        original = getEquipByCode(data);
+        data = original.subtype;
+    }
     switch (data) {
         case 'beam': getLimbByID(x).contains.push(new Beam(x));  break;
+    }
+    if (typeof original != 'undefined') {
+        let trans = getLimbByID(x).contains.at(-1);
+        let z = original.export;
+        trans.updFromJSON(z);
+        delEquip(original.equipCode);
     }
 }
 function loadEquip(limb, data) {
@@ -570,6 +656,29 @@ function updArmor(x) {;
 function updBeam(x) {
     getEquipByCode(x).updFromForm();
 } 
+function splitEquipWin(x) {
+    targ = getEquipByCode(x);
+    let tex = 
+    `<div class="systemMessage" id="splitWin">
+        <form name="splitWin">
+            <p>How many spaces you want to split?</p>
+            <input name="num" type="range" max="${targ.space-1}" min="1">
+            <span id='splC'></span>
+            <button onclick="splitEquip('${x}')" type="button">OK</button>
+        </form>
+    </div>`
+    document.body.insertAdjacentHTML('beforeend', tex);
+    document.forms.splitWin.num.onmousemove = function() {
+        $('#splC')[0].innerHTML = document.forms.splitWin.num.value;
+    }
+}
+function splitEquip(x) {
+    targ = getEquipByCode(x);
+    n = document.forms.splitWin.num.value;
+    $('#splitWin')[0].remove();
+    targ.limbLink.contains.push(new SlavePart(targ, targ.limbLink.id, n));
+    callUpdTotal();
+}
 
 function delLimb(x) {
     for (let c = 0; c < meck.length; c++) {
@@ -602,6 +711,28 @@ function delEquip(x) {
     if (meck[whatLimb].contains.length == 0) {$(`#emptyEquipLabel${whatLimb}`).show()}; 
     updTotal();
 }
+function delSlave(x) {
+    let c = x.indexOf('_'); //cashe variable
+    let whatLimb = x.slice(0, c);
+    let whatEq = x.slice(c+1);
+    y = getEquipByCode(x);
+    y.inGUI.remove();
+    for (c in y.masterLink.slaveParts) {
+        if (y.masterLink.slaveParts[c] == y) {
+            y.masterLink.space += y.space;
+            y.masterLink.slaveParts.splice(c, 1);
+        }
+    }
+    for (c in meck[whatLimb].contains) {
+        if (meck[whatLimb].contains[c] == y) {
+            y = c;
+            break;
+        }
+    }
+    meck[whatLimb].contains.splice(y, 1);
+    if (meck[whatLimb].contains.length == 0) {$(`#emptyEquipLabel${whatLimb}`).show()}; 
+    updTotal();
+} 
 
 function callUpdTotal() {
     document.dispatchEvent(new Event('updTotal'));
@@ -650,7 +781,7 @@ function loadJsonShowDialog() {
         <form name="loadWin">
             <p>Put here JSON of your meck:</p>
             <input name="lMeck">
-            <button onclick="loadJsonTotal()">OK</button>
+            <button onclick="loadJsonTotal()" type="button">OK</button>
         </form>
     </div>`
     document.body.insertAdjacentHTML('beforeend', tex); 
@@ -668,26 +799,31 @@ function loadJsonTotal() {
     for (let c in loadCore) {
         addLimb(loadCore[c].subtype.slice(4, 5));
         meck.at(-1).updFromJSON(loadCore[c]);
-        meck.at(-1).armor = new Armor(meck.at(-1).id);
-        meck.at(-1).armor.updFromJSON(loadCore[c].armor);
+        if (loadCore[c].armor != null) {
+            meck.at(-1).armor = new Armor(meck.at(-1).id);
+            meck.at(-1).armor.updFromJSON(loadCore[c].armor);
+        }
         for (let c2 in loadCore[c].contains) { 
             let loadData=loadCore[c].contains[c2];
             loadEquip(meck.at(-1), loadData);
         }
     }
+
     updTotal();
-} // переписать
+} 
 
 function fuckDef(event) {
     event.preventDefault();
 }
-function farParent(x, n) {
-    for (let c = 0; c < n; c++) {
-        x = x.parentNode;
-    }
-    return x;
-}
 function mektonRounding(x) {
     let y = (Math.ceil(x*10)/10);
     return y;
+}
+function stopHereMotherFucker(x, y) {
+    y.onmouseover = function(event) {
+        x.draggable = false;
+    }
+    y.onmouseout = function(event) {
+        x.draggable = true;
+    }
 }
