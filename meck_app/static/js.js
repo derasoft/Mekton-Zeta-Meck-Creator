@@ -14,25 +14,30 @@ let y = 0;
     }
     return y;
 }
-function getLimbByID(x, old=false) {
-    if (old == false)
-        for (let c=0; c < meck.length; c++) {
-            if (meck[c].id == x) return meck[c];
-        }
-    else
-        for (let c=0; c < meck.length; c++) {
-            if (meck[c].oldID == x) return meck[c];
-        }
+function getLimbByID(x) {
+    for (let c=0; c < meck.length; c++) {
+        if (meck[c].id == x) return meck[c];
+    }
 }
 
-function getEquipByCode(x) {
-    let y = x.indexOf('_');
-    let whatLimb = x.slice(0, y);
-    let whatEq = x.slice(y+1);
-    y = meck[whatLimb];
-    for (let c in y.contains) {
-        if (y.contains[c].id == whatEq) 
-            return y.contains[c];
+function getEquipByCode(x, old=false) {
+    if (old == false) {
+        let y = x.indexOf('_');
+        let whatLimb = x.slice(0, y);
+        let whatEq = x.slice(y+1);
+        y = meck[whatLimb];
+        for (let c in y.contains) {
+            if (y.contains[c].id == whatEq) 
+                return y.contains[c];
+        }
+    }
+    else {
+        for (c in meck) {
+            for (let c2 in meck[c].contains) {
+                if (meck[c].contains[c2].oldID == x) 
+                    return meck[c].contains[c2];
+            }
+        }
     }
 }
 
@@ -285,7 +290,7 @@ class Armor {
     }
 }
 class SlavePart {
-    constructor(targ, limbID, n) {
+    constructor(targ, n) {
         //Внутренности
         let limb = targ.limbLink; //getLimbByID(limbID);
         this.masterLink = targ;
@@ -313,12 +318,14 @@ class SlavePart {
         limb.equipCounter++;
     }
     updFromJSON(x, newMaster) {
-
+        this.masterLink = newMaster;
+        this.space = x.space;
     }
     get export() {
         let x = {
             id: this.masterLink.equipCode,
             space: this.space,
+            subtype: this.subtype,
         }
         return x;
     }
@@ -560,7 +567,7 @@ class Beam {
     }
     get export() {
         let x = {
-            id: this.id,
+            id: this.equipCode,
             accuracy: this.accuracy,
             angle: this.angle,
             burst: this.burst,
@@ -644,6 +651,8 @@ function loadEquip(limb, data) {
             limb.contains.push(new Beam(limb.id));
             limb.contains.at(-1).updFromJSON(data); 
             break;
+        case 'slavePart':
+            limb.contains.push(data);
     }
 }
 
@@ -676,7 +685,7 @@ function splitEquip(x) {
     targ = getEquipByCode(x);
     n = document.forms.splitWin.num.value;
     $('#splitWin')[0].remove();
-    targ.limbLink.contains.push(new SlavePart(targ, targ.limbLink.id, n));
+    targ.limbLink.contains.push(new SlavePart(targ, n));
     callUpdTotal();
 }
 
@@ -808,7 +817,15 @@ function loadJsonTotal() {
             loadEquip(meck.at(-1), loadData);
         }
     }
-
+    for (let c in meck) {
+        for (let c2 in meck[c].contains) {
+            if (meck[c].contains[c2].subtype == 'slavePart') {
+                eq = getEquipByCode(meck[c].contains[c2].id, true);
+                n = meck[c].contains[c2].space;
+                meck[c].contains[c2] = new SlavePart(eq, n);
+            }
+        }
+    }
     updTotal();
 } 
 
