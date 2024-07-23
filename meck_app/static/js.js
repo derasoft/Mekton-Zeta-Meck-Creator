@@ -290,9 +290,9 @@ class Armor {
     }
 }
 class SlavePart {
-    constructor(targ, n) {
+    constructor(targ, n, limb=targ.limbLink) {
         //Внутренности
-        let limb = targ.limbLink; //getLimbByID(limbID);
+        // let limb = targ.limbLink;
         this.masterLink = targ;
         this.masterLink.slaveParts.push(this);
         this.id = limb.equipCounter;
@@ -316,9 +316,16 @@ class SlavePart {
         limb.inGUI.equipList.insertAdjacentHTML('beforeend', tex);
         this.inGUI = $(`#equip${this.equipCode}`)[0];
         limb.equipCounter++;
+        this.inGUI.dataLink = this;
+        this.inGUI.draggable = "true";
+        this.inGUI.ondragstart = function(event) {
+            event.dataTransfer.setData('text/plain', this.dataLink.equipCode);
+        }
+        stopHereMotherFucker(this.inGUI, this.inGUI.name);
     }
     updFromJSON(x, newMaster) {
         this.masterLink = newMaster;
+        this.masterLink.slaveParts.push(this);
         this.space = x.space;
     }
     get export() {
@@ -630,19 +637,25 @@ function addEquip(event) {
     let original = undefined;
     event.preventDefault();
     let data = event.dataTransfer.getData("text/plain");
-    let x = Number(this.id.slice(9));
+    let x = getLimbByID(Number(this.id.slice(9)));
     if (data.indexOf('_') != -1) {
         original = getEquipByCode(data);
         data = original.subtype;
     }
     switch (data) {
-        case 'beam': getLimbByID(x).contains.push(new Beam(x));  break;
+        case 'beam': x.contains.push(new Beam(x.id));  break;
+        case 'slavePart': x.contains.push(new SlavePart(original.masterLink, original.space, x));  break;
     }
     if (typeof original != 'undefined') {
-        let trans = getLimbByID(x).contains.at(-1);
+        let trans = x.contains.at(-1);
         let z = original.export;
-        trans.updFromJSON(z);
-        delEquip(original.equipCode);
+        if (original.subtype == 'slavePart') {
+            delSlave(original.equipCode);
+        }
+        else {
+            trans.updFromJSON(z);
+            delEquip(original.equipCode);
+        }
     }
 }
 function loadEquip(limb, data) {
