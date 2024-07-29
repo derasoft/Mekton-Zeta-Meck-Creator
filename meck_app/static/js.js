@@ -19,7 +19,6 @@ function getLimbByID(x) {
         if (meck[c].id == x) return meck[c];
     }
 }
-
 function getEquipByCode(x, old=false) {
     if (old == false) {
         let y = x.indexOf('_');
@@ -38,6 +37,21 @@ function getEquipByCode(x, old=false) {
                     return meck[c].contains[c2];
             }
         }
+    }
+}
+function fuckDef(event) {
+    event.preventDefault();
+}
+function mektonRounding(x) {
+    let y = (Math.ceil(x*10)/10);
+    return y;
+}
+function stopHereMotherFucker(parrent, child) {
+    child.onmouseover = function(event) {
+        parrent.draggable = false;
+    }
+    child.onmouseout = function(event) {
+        parrent.draggable = true;
     }
 }
 
@@ -177,7 +191,7 @@ class Limb {
         this.inGUI.form.elements["name"].value = x.name;
         this.inGUI.form.elements['mclass'].value = x.mclass;
         this.inGUI.form.elements['type'].value = x.wheelSwitch;
-        partCount--;
+        // partCount--;
         this.updFromForm();
     }
     get export() {
@@ -295,6 +309,7 @@ class SlavePart {
         // let limb = targ.limbLink;
         this.masterLink = targ;
         this.masterLink.slaveParts.push(this);
+        limb.equipCounter++;
         this.id = limb.equipCounter;
         this.space = Number(n);
         this.masterLink.space = this.masterLink.space - this.space;
@@ -309,7 +324,7 @@ class SlavePart {
             <div>
                 <p>
                     <button type="button" onclick="delSlave('${this.equipCode}')">Х</button>
-                    Slave Part of ${this.masterLink.name}
+                    Slave Part of <span id=slaveName${this.equipCode}>${this.masterLink.name}</span>
                 </p>
             </div>
         </form>`
@@ -321,7 +336,6 @@ class SlavePart {
         this.inGUI.ondragstart = function(event) {
             event.dataTransfer.setData('text/plain', this.dataLink.equipCode);
         }
-        stopHereMotherFucker(this.inGUI, this.inGUI.name);
     }
     updFromJSON(x, newMaster) {
         this.masterLink = newMaster;
@@ -337,153 +351,163 @@ class SlavePart {
         return x;
     }
 }
-class Beam {
+class EquipBase {
     constructor(limbID) {
-        // Внутренние данные
+        //Внутренние данные
         this.limbLink = getLimbByID(limbID);
-        let curLimb = this.limbLink;
-        this.type= 'weapon'; 
-        this.subtype= 'beam';
-        this.id = curLimb.equipCounter;
-        this.equipCode = curLimb.id + '_' + this.id;
+        this.limbLink.equipCounter++;
+        this.id = this.limbLink.equipCounter;
+        this.equipCode = this.limbLink.id + '_' + this.id;
         this.slaveParts = [];
-        curLimb.equipCounter++;
 
-        // Форма
-        $(`#emptyEquipLabel${curLimb.id}`).hide();
-        if (curLimb.contains.length == 0) {
-            $(`#emptyEquipLabel${curLimb.id}`).hide();
-        }
+        //форма
+        $(`#emptyEquipLabel${this.limbLink.id}`).hide();
         let tex = 
             `<form name="equip${this.equipCode}" onchange="updBeam('${this.equipCode}')">
-                <div>
-                    <p>
-                        <button type="button" onclick="delEquip('${this.equipCode}')">Х</button>
-                        <b><input name='name' value='Beam Weapon'></b>
-                        <button type="button" onclick="splitEquipWin('${this.equipCode}')">
-                            <img src='static/split_icon.png'>
-                        </button>
-                    </p>
-                    <p id="status${this.equipCode}"></p>
-                    <p>
-                        Damage:
-                        <select name="damage">
-                            <option value = "1_4">1 dmg | Range 4</option>
-                            <option value = "2_6">2 dmg | Range 6</option>
-                            <option value = "3_7">3 dmg | Range 7</option>
-                            <option value = "4_8">4 dmg | Range 8</option>
-                            <option value = "5_9">5 dmg | Range 9</option>
-                            <option value = "6_10">6 dmg | Range 10</option>
-                            <option value = "7_11">7 dmg | Range 11</option>
-                            <option value = "8_11">8 dmg | Range 11</option>
-                            <option value = "9_12">9 dmg | Range 12</option>
-                            <option value = "10_13">10 dmg | Range 13</option>
-                            <option value = "11_13">11 dmg | Range 13</option>
-                            <option value = "12_14">12 dmg | Range 14</option>
-                            <option value = "13_14">13 dmg | Range 14</option>
-                            <option value = "14_15">14 dmg | Range 15</option>
-                            <option value = "15_15">15 dmg | Range 15</option>
-                            <option value = "16_16">16 dmg | Range 16</option>
-                            <option value = "17_16">17 dmg | Range 16</option>
-                            <option value = "18_17">18 dmg | Range 17</option>
-                            <option value = "19_17">19 dmg | Range 17</option>
-                            <option value = "20_18">20 dmg | Range 18</option>
-                        </select>
-                        Range:
-                        <select name="range">
-                            <option value = "0.62">25%</option>
-                            <option value = "0.75">50%</option>
-                            <option value = "0.88">75%</option>
-                            <option value = "1" selected>100%</option>
-                            <option value = "1.12">125%</option>
-                            <option value = "1.25">150%</option>
-                            <option value = "1.38">175%</option>
-                            <option value = "1.5">200%</option>
-                            <option value = "1.75">250%</option>
-                            <option value = "2">300%</option>
-                        </select>
-                        Accuracy:
-                        <select name="accuracy">
-                            <option value = "0.6">-2</option>
-                            <option value = "0.8">-1</option>
-                            <option value = "0.9">0</option>
-                            <option value = "1" selected>+1</option>
-                            <option value = "1.5">+2</option>
-                            <option value = "2">+3</option>
-                        </select>
-                        Warm-up Time:
-                        <select name="warmup">
-                            <option value = "1">0</option>
-                            <option value = "0.9">1</option>
-                            <option value = "0.7">2</option>
-                            <option value = "0.6">3</option>
-                        </select>
-                        Shots:
-                        <select name="shots">
-                            <option value = "1">∞</option>
-                            <option value = "0.9">10</option>
-                            <option value = "0.8">5</option>
-                            <option value = "0.7">3</option>
-                            <option value = "0.6">2</option>
-                            <option value = "0.5">1</option>
-                            <option value = "0.33">0</option>
-                        </select>
-                        Wide Angle:
-                        <select name="angle">
-                            <option value = "1">N/A</option>
-                            <option value = "2">Hex</option>
-                            <option value = "3">60°</option>
-                            <option value = "5">180°</option>
-                            <option value = "7">300°</option>
-                            <option value = "9">360°</option>
-                        </select>
-                        Burst:
-                        <select name="burst">
-                            <option value = "1">1</option>
-                            <option value = "1.5">2</option>
-                            <option value = "2">3</option>
-                            <option value = "2.5">4</option>
-                            <option value = "3">5</option>
-                            <option value = "3.5">6</option>
-                            <option value = "4">7</option>
-                            <option value = "4.5">8</option>
-                            <option value = "5">∞</option>
-                        </select>
-                    </p>
-                    <p>
-                        Clip-fed: <input name="clip" type="checkbox" >
-                        Target: Standart <input type="radio" name="target" value="standart" checked>
-                    </p>
-                    <table>
-                        <tr>
-                            <td>Anti-Missle <input type="radio" name="target" value="am"></td>
-                            <td>Anti-Personel <input type="radio" name="target" value="ap"></td>
-                            <td>Anti-Missle & Anti-Personel <input type="radio" name="target" value="amap"></td>
-                        </tr>
-                        <tr>
-                            <td>Variable <input type="radio" name="target" value="vam"></td>
-                            <td>Variable <input type="radio" name="target" value="vap"></td>
-                            <td>All-Purpouse <input type="radio" name="target" value="vamap"></td>
-                        </tr>
-                    </table>
-                    <p> 
-                        Fragile: <input name="fragile" type="checkbox"> 
-                        Long Range: <input name="longrange" type="checkbox"> 
-                        Hydro: <input name="hydro" type="checkbox"> 
-                        Mega-Beam: <input name="mega" type="checkbox"> 
-                        Disruptor: <input name="disruptor" type="checkbox"> 
-                    </p>
-                </div>
             </form>`;
-        curLimb.inGUI.equipList.insertAdjacentHTML('beforeend', tex);
-        this.inGUI= document.forms[`equip${this.equipCode}`]
+        this.limbLink.inGUI.equipList.insertAdjacentHTML('beforeend', tex);
+        this.inGUI = document.forms[`equip${this.equipCode}`]
         this.inGUI.dataLink = this;
         this.inGUI.draggable = "true";
         this.inGUI.ondragstart = function(event) {
             event.dataTransfer.setData('text/plain', this.dataLink.equipCode);
         }
         stopHereMotherFucker(this.inGUI, this.inGUI.name);
+    }
+    updSlaveNames() {
+        for (let c in this.slaveParts) {
+            $(`#slaveName${this.slaveParts[c].equipCode}`)[0].innerHTML = this.name; 
+        }
+    }
+}
+class Beam extends EquipBase {
+    constructor(limbID) {
+        // Внутренние данные
+        super(limbID);
+        this.type= 'weapon'; 
+        this.subtype= 'beam';
 
+        // Форма
+        this.inGUI.innerHTML = 
+            `<div>
+                <p>
+                    <button type="button" onclick="delEquip('${this.equipCode}')">Х</button>
+                    <b><input name='name' value='Beam Weapon'></b>
+                    <button type="button" onclick="splitEquipWin('${this.equipCode}')">
+                        <img src='static/split_icon.png'>
+                    </button>
+                </p>
+                <p id="status${this.equipCode}"></p>
+                <p>
+                    Damage:
+                    <select name="damage">
+                        <option value = "1_4">1 dmg | Range 4</option>
+                        <option value = "2_6">2 dmg | Range 6</option>
+                        <option value = "3_7">3 dmg | Range 7</option>
+                        <option value = "4_8">4 dmg | Range 8</option>
+                        <option value = "5_9">5 dmg | Range 9</option>
+                        <option value = "6_10">6 dmg | Range 10</option>
+                        <option value = "7_11">7 dmg | Range 11</option>
+                        <option value = "8_11">8 dmg | Range 11</option>
+                        <option value = "9_12">9 dmg | Range 12</option>
+                        <option value = "10_13">10 dmg | Range 13</option>
+                        <option value = "11_13">11 dmg | Range 13</option>
+                        <option value = "12_14">12 dmg | Range 14</option>
+                        <option value = "13_14">13 dmg | Range 14</option>
+                        <option value = "14_15">14 dmg | Range 15</option>
+                        <option value = "15_15">15 dmg | Range 15</option>
+                        <option value = "16_16">16 dmg | Range 16</option>
+                        <option value = "17_16">17 dmg | Range 16</option>
+                        <option value = "18_17">18 dmg | Range 17</option>
+                        <option value = "19_17">19 dmg | Range 17</option>
+                        <option value = "20_18">20 dmg | Range 18</option>
+                    </select>
+                    Range:
+                    <select name="range">
+                        <option value = "0.62">25%</option>
+                        <option value = "0.75">50%</option>
+                        <option value = "0.88">75%</option>
+                        <option value = "1" selected>100%</option>
+                        <option value = "1.12">125%</option>
+                        <option value = "1.25">150%</option>
+                        <option value = "1.38">175%</option>
+                        <option value = "1.5">200%</option>
+                        <option value = "1.75">250%</option>
+                        <option value = "2">300%</option>
+                    </select>
+                    Accuracy:
+                    <select name="accuracy">
+                        <option value = "0.6">-2</option>
+                        <option value = "0.8">-1</option>
+                        <option value = "0.9">0</option>
+                        <option value = "1" selected>+1</option>
+                        <option value = "1.5">+2</option>
+                        <option value = "2">+3</option>
+                    </select>
+                    Warm-up Time:
+                    <select name="warmup">
+                        <option value = "1">0</option>
+                        <option value = "0.9">1</option>
+                        <option value = "0.7">2</option>
+                        <option value = "0.6">3</option>
+                    </select>
+                    Shots:
+                    <select name="shots">
+                        <option value = "1">∞</option>
+                        <option value = "0.9">10</option>
+                        <option value = "0.8">5</option>
+                        <option value = "0.7">3</option>
+                        <option value = "0.6">2</option>
+                        <option value = "0.5">1</option>
+                        <option value = "0.33">0</option>
+                    </select>
+                    Wide Angle:
+                    <select name="angle">
+                        <option value = "1">N/A</option>
+                        <option value = "2">Hex</option>
+                        <option value = "3">60°</option>
+                        <option value = "5">180°</option>
+                        <option value = "7">300°</option>
+                        <option value = "9">360°</option>
+                    </select>
+                    Burst:
+                    <select name="burst">
+                        <option value = "1">1</option>
+                        <option value = "1.5">2</option>
+                        <option value = "2">3</option>
+                        <option value = "2.5">4</option>
+                        <option value = "3">5</option>
+                        <option value = "3.5">6</option>
+                        <option value = "4">7</option>
+                        <option value = "4.5">8</option>
+                        <option value = "5">∞</option>
+                    </select>
+                </p>
+                <p>
+                    Clip-fed: <input name="clip" type="checkbox" >
+                    Target: Standart <input type="radio" name="target" value="standart" checked>
+                </p>
+                <table>
+                    <tr>
+                        <td>Anti-Missle <input type="radio" name="target" value="am"></td>
+                        <td>Anti-Personel <input type="radio" name="target" value="ap"></td>
+                        <td>Anti-Missle & Anti-Personel <input type="radio" name="target" value="amap"></td>
+                    </tr>
+                    <tr>
+                        <td>Variable <input type="radio" name="target" value="vam"></td>
+                        <td>Variable <input type="radio" name="target" value="vap"></td>
+                        <td>All-Purpouse <input type="radio" name="target" value="vamap"></td>
+                    </tr>
+                </table>
+                <p> 
+                    Fragile: <input name="fragile" type="checkbox"> 
+                    Long Range: <input name="longrange" type="checkbox"> 
+                    Hydro: <input name="hydro" type="checkbox"> 
+                    Mega-Beam: <input name="mega" type="checkbox"> 
+                    Disruptor: <input name="disruptor" type="checkbox"> 
+                </p>
+            </div>`
+        stopHereMotherFucker(this.inGUI, this.inGUI.name);
         this.updFromForm()
     }
     updFromForm() {
@@ -545,7 +569,8 @@ class Beam {
         newa.spaceFull = newa.cp;
         newa.space = newa.spaceFull;
         $(`#status${this.equipCode}`)[0].innerHTML = newa.cp + ' CP, Range: ' + (newa.range * newa.rangemod) + ', Max. Range: ' + (newa.range * newa.rangemod)*(newa.range * newa.rangemod);
-        callUpdTotal();;
+        super.updSlaveNames();
+        callUpdTotal();
     }
     updFromJSON(x) {
         this.oldID = x.id;
@@ -569,7 +594,6 @@ class Beam {
         formdata.hydro.checked = x.hydro;
         formdata.mega.checked = x.mega;
         formdata.disruptor.checked = x.disruptor;
-        this.limbLink.equipCounter--;
         this.updFromForm();
     }
     get export() {
@@ -687,6 +711,7 @@ function splitEquipWin(x) {
             <input name="num" type="range" max="${targ.space-1}" min="1">
             <span id='splC'></span>
             <button onclick="splitEquip('${x}')" type="button">OK</button>
+            <button onclick="$('#splitWin')[0].remove();">X</button>
         </form>
     </div>`
     document.body.insertAdjacentHTML('beforeend', tex);
@@ -835,25 +860,9 @@ function loadJsonTotal() {
             if (meck[c].contains[c2].subtype == 'slavePart') {
                 eq = getEquipByCode(meck[c].contains[c2].id, true);
                 n = meck[c].contains[c2].space;
-                meck[c].contains[c2] = new SlavePart(eq, n);
+                meck[c].contains[c2] = new SlavePart(eq, n, getLimbByID(c));
             }
         }
     }
     updTotal();
 } 
-
-function fuckDef(event) {
-    event.preventDefault();
-}
-function mektonRounding(x) {
-    let y = (Math.ceil(x*10)/10);
-    return y;
-}
-function stopHereMotherFucker(x, y) {
-    y.onmouseover = function(event) {
-        x.draggable = false;
-    }
-    y.onmouseout = function(event) {
-        x.draggable = true;
-    }
-}
